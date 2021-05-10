@@ -69,4 +69,111 @@ struct BuildNumberEditiorController
     }
     
     
+    func getExcutableProjects(projectList: [Project], complationHandler: @escaping (Result<[Project], Error>) -> Void)
+    {
+        DispatchQueue.global(qos: .userInitiated).async
+        {
+            var excutableProjects = [Project]()
+            
+            projectList.forEach() { project in
+                
+                if project.selected
+                {
+                    excutableProjects.append(Project(file: project.file, targets: getTargetsForProject(project){ error in
+                        complationHandler(Result.failure(error))
+                    }, selected: project.selected))
+                }
+                
+            }
+            
+            DispatchQueue.main.async
+            {
+                complationHandler(Result.success(excutableProjects))
+            }
+        }
+        
+    }
+    
+    func getTargetsForProject(_ project: Project, errorHandler: (Error) -> Void) -> [Target]
+    {
+        var resultTargets = [Target]()
+        
+        let projectFile = FileManager.default.readFile(url: project.file + "/project.pbxproj", errorHandler: errorHandler)
+        
+        if projectFile == ""
+        {
+            return []
+        }
+        
+        let XCConfigurationListSection = projectFile.getSectionInProjectFile(sectionName: "XCConfigurationList")
+        
+        var XCConfigurationListRows = XCConfigurationListSection.components(separatedBy: "Build configuration list")
+        XCConfigurationListRows.remove(at: 0)
+        
+        for (_, row) in XCConfigurationListRows.enumerated()
+        {
+            let name = row.slice(from: "\"", to: "\"") ?? ""
+            var isDuplicate = false
+            
+            resultTargets.forEach() { target in
+                if target.name == name
+                {
+                    isDuplicate = true
+                }
+            }
+            
+            if !isDuplicate
+            {
+                var tempTarget  = Target(name: name)
+                let lines = row.components(separatedBy: "\n")
+                
+                lines.forEach() { line in
+                    if line.contains("/*")
+                    {
+                        var tempBuild = BuildConfig()
+                        let tempLine = line.trimmingCharacters(in: .whitespaces)
+                        let sets = tempLine.components(separatedBy: " /*")
+                        
+                        if sets.count >= 2
+                        {
+                            tempBuild.id = sets[0]
+                            tempBuild.name = line.slice(from: "/* ", to: " */") ?? ""
+                            
+                            if !tempBuild.name.isEmpty
+                            {
+                                tempTarget.buildConfig.append(tempBuild)
+                            }
+                        }
+                        
+                    }
+                }
+                
+                resultTargets.append(tempTarget)
+            }
+        }
+        
+        // Setting values
+        
+        let XCBuildConfigurationSection = projectFile.getSectionInProjectFile(sectionName: "XCBuildConfiguration")
+        
+        for (index, resultTarget) in resultTargets.enumerated()
+        {
+            let tempBreakString = XCBuildConfigurationSection.components(separatedBy: resultTarget.buildConfig[0].id).last ?? ""
+            
+            let XCBuildConfigurationRows = tempBreakString.components(separatedBy: "isa = XCBuildConfiguration;")
+            let XCBuildConfigurationRow = XCBuildConfigurationRows[1]
+            
+            if XCBuildConfigurationRow.contains("TEST_TARGET_NAME") || XCBuildConfigurationRow.contains("TEST_HOST")
+            {
+                resultTargets[index].isTestTarget = true
+            }
+            
+            resultTargets[index].versionNumber = XCBuildConfigurationRow.slice(from: "MARKETING_VERSION = ", to: ";") ?? ""
+            resultTargets[index].buildNumber = XCBuildConfigurationRow.slice(from: "CURRENT_PROJECT_VERSION = ", to: ";") ?? ""
+        }
+        
+        return resultTargets
+    }
+    
+    
 }

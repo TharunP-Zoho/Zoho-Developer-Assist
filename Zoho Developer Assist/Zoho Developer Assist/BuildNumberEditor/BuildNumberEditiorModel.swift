@@ -10,7 +10,25 @@ import SwiftUI
 struct Project: Hashable
 {
     var file = ""
+    var targets = [Target]()
     var selected = false
+}
+
+struct BuildConfig: Hashable
+{
+    var id = ""
+    var name = ""
+}
+
+struct Target: Hashable
+{
+    var name = ""
+    var buildConfig = [BuildConfig]()
+    var buildNumber = ""
+    var versionNumber = ""
+    var needToAvoid = false
+    var isTestTarget = false
+    
 }
 
 enum Postion: Hashable
@@ -42,7 +60,7 @@ struct BuildNumberEditiorModel
     var incrementalValue = 1
     var postions = [Postion.other(1), Postion.other(2), Postion.last]
     var selectedPosition = Postion.last
-    
+    var excutableProjects = [Project]()
     
     enum UserDefaultKeys: String
     {

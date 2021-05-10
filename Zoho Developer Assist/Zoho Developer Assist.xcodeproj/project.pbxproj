@@ -21,6 +21,7 @@
 		73A3EEF7264657600012E2BD /* FileManager+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEF32646575F0012E2BD /* FileManager+Extension.swift */; };
 		73A3EEF8264657600012E2BD /* FileParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEF4264657600012E2BD /* FileParser.swift */; };
 		73A3EEFA2646AEE80012E2BD /* BuildNumberEditorPerview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEF92646AEE80012E2BD /* BuildNumberEditorPerview.swift */; };
+		73A3EEFC2648559A0012E2BD /* Regex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEFB2648559A0012E2BD /* Regex.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +42,7 @@
 		73A3EEF32646575F0012E2BD /* FileManager+Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "FileManager+Extension.swift"; sourceTree = "<group>"; };
 		73A3EEF4264657600012E2BD /* FileParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileParser.swift; sourceTree = "<group>"; };
 		73A3EEF92646AEE80012E2BD /* BuildNumberEditorPerview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildNumberEditorPerview.swift; sourceTree = "<group>"; };
+		73A3EEFB2648559A0012E2BD /* Regex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Regex.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -145,6 +147,7 @@
 				73A3EEF4264657600012E2BD /* FileParser.swift */,
 				73A3EEF22646575F0012E2BD /* String+Extension.swift */,
 				73A3EEF12646575F0012E2BD /* URL+Extension.swift */,
+				73A3EEFB2648559A0012E2BD /* Regex.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -230,6 +233,7 @@
 				73A3EECE264577E50012E2BD /* Zoho_Developer_AssistApp.swift in Sources */,
 				73A3EEF8264657600012E2BD /* FileParser.swift in Sources */,
 				73A3EEFA2646AEE80012E2BD /* BuildNumberEditorPerview.swift in Sources */,
+				73A3EEFC2648559A0012E2BD /* Regex.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

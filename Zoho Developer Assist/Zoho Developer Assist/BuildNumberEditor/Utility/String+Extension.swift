@@ -51,6 +51,31 @@ extension String {
         return value
     }
     
+    
+    func getSectionInProjectFile(sectionName: String) -> String
+    {
+        let configBegin = "/* Begin \(sectionName) section */"
+        let configEnd = "/* End \(sectionName) section */"
+        
+        return self.slice(from: configBegin, to: configEnd) ?? ""
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //
+    
     func checkIfTextContains() -> Bool
     {
         if self.isEmpty

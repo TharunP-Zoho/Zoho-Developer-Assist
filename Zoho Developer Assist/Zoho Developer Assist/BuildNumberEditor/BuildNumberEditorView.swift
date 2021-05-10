@@ -15,7 +15,7 @@ struct BuildNumberEditorView: View {
     @State var isFileImportAlert = false
     @State var fileImportAlertMsg = ""
     @State var isProgressViewNeeded = false
-    
+    var sasd: Binding<String>? = nil
     var body: some View {
         
         Text("Build Number Changes")
@@ -242,7 +242,21 @@ struct BuildNumberEditorView: View {
         HStack{
             Text("Let's check in preview")
             Spacer()
-            Button("Preview", action: {})
+            Button("Preview", action: {
+                isProgressViewNeeded = true
+                controller.getExcutableProjects(projectList: controller.model.projectList) { result in
+                    
+                    isProgressViewNeeded = false
+                    
+                    switch result
+                    {
+                    case .success(let projects):
+                        controller.model.excutableProjects = projects
+                    case .failure(let error):
+                        print("\(error.localizedDescription)")
+                    }
+                }
+            })
         }
         .padding()
         .background(Color("PerviewBanner"))

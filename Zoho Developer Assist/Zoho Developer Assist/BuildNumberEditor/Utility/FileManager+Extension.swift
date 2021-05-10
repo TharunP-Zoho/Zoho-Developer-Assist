@@ -24,5 +24,21 @@ extension FileManager
             return url.appendingPathComponent(path, isDirectory: false)
         })
     }
+    
+    func readFile(url: String, errorHandler: (Error) -> Void) -> String
+    {
+        var fileContent = ""
+        
+        do
+        {
+            try fileContent = String(contentsOf: URL(fileURLWithPath: url))
+        }
+        catch
+        {
+            errorHandler(error)
+        }
+        
+        return fileContent
+    }
 }
 
