@@ -22,6 +22,7 @@
 		73A3EEF8264657600012E2BD /* FileParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEF4264657600012E2BD /* FileParser.swift */; };
 		73A3EEFA2646AEE80012E2BD /* BuildNumberEditorPerview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEF92646AEE80012E2BD /* BuildNumberEditorPerview.swift */; };
 		73A3EEFC2648559A0012E2BD /* Regex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEFB2648559A0012E2BD /* Regex.swift */; };
+		73A3EEFE2649535F0012E2BD /* Collapsible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEFD2649535F0012E2BD /* Collapsible.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +44,7 @@
 		73A3EEF4264657600012E2BD /* FileParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileParser.swift; sourceTree = "<group>"; };
 		73A3EEF92646AEE80012E2BD /* BuildNumberEditorPerview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildNumberEditorPerview.swift; sourceTree = "<group>"; };
 		73A3EEFB2648559A0012E2BD /* Regex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Regex.swift; sourceTree = "<group>"; };
+		73A3EEFD2649535F0012E2BD /* Collapsible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collapsible.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -128,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				73A3EECF264577E50012E2BD /* HomeView.swift */,
+				73A3EEFD2649535F0012E2BD /* Collapsible.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -227,6 +230,7 @@
 				73A3EEF5264657600012E2BD /* URL+Extension.swift in Sources */,
 				73A3EEEC264640070012E2BD /* BuildNumberEditionController.swift in Sources */,
 				73A3EEE626459A290012E2BD /* ButtonStyle.swift in Sources */,
+				73A3EEFE2649535F0012E2BD /* Collapsible.swift in Sources */,
 				73A3EEEA26463FD50012E2BD /* BuildNumberEditiorModel.swift in Sources */,
 				73A3EEE826459D540012E2BD /* BuildNumberEditorView.swift in Sources */,
 				73A3EED0264577E50012E2BD /* HomeView.swift in Sources */,

@@ -25,6 +25,7 @@ struct Target: Hashable
     var name = ""
     var buildConfig = [BuildConfig]()
     var buildNumber = ""
+    var manualBuildNumber = ""
     var versionNumber = ""
     var needToAvoid = false
     var isTestTarget = false
@@ -43,6 +44,22 @@ enum Postion: Hashable
             return "\(integer)"
         case .last:
             return "Last"
+        }
+    }
+}
+
+struct EnumeratedForEach<ItemType, ContentView: View>: View {
+    let data: [ItemType]
+    let content: (Int, ItemType) -> ContentView
+    
+    init(_ data: [ItemType], @ViewBuilder content: @escaping (Int, ItemType) -> ContentView) {
+        self.data = data
+        self.content = content
+    }
+    
+    var body: some View {
+        ForEach(Array(self.data.enumerated()), id: \.offset) { idx, item in
+            self.content(idx, item)
         }
     }
 }

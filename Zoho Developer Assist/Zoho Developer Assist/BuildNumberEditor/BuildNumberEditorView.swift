@@ -15,6 +15,8 @@ struct BuildNumberEditorView: View {
     @State var isFileImportAlert = false
     @State var fileImportAlertMsg = ""
     @State var isProgressViewNeeded = false
+    @State var isPreviewReady = false
+    
     var sasd: Binding<String>? = nil
     var body: some View {
         
@@ -57,7 +59,15 @@ struct BuildNumberEditorView: View {
                 Divider()
                 
                 Spacer()
-                getPreviewButton()
+                if isPreviewReady
+                {
+                    getPreview()
+                }
+                else
+                {
+                    getPreviewButton()
+                }
+                
             }
             
             if isProgressViewNeeded
@@ -255,6 +265,8 @@ struct BuildNumberEditorView: View {
                     case .failure(let error):
                         print("\(error.localizedDescription)")
                     }
+                    
+                    isPreviewReady = true
                 }
             })
         }
@@ -265,7 +277,35 @@ struct BuildNumberEditorView: View {
     }
     // ----------------------------------- Preview ------------------------------
     
-    
+    private func getPreview() -> some View
+    {
+        
+        EnumeratedForEach(controller.model.excutableProjects){ (projectIndex, project) in
+            
+            Collapsible( label: { Text(project.file.fileName.removeExtension) },
+                            content: {
+                                
+                                EnumeratedForEach(project.targets, content: { (targetIndex, target) in
+                                    
+                                    HStack{
+                                        Text("\(target.name) : \(target.buildNumber) -> ")
+                                        TextField(target.buildNumber, text: $controller.model.excutableProjects[projectIndex].targets[targetIndex].manualBuildNumber)
+                                        Spacer()
+                                    }
+                                    Divider()
+                                    
+                                })
+                                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
+                                .frame(maxWidth: .infinity)
+                            }
+                        )
+            .animation(.easeOut)
+                        .transition(.slide)
+                        .frame(maxWidth: .infinity)
+            
+            Divider()
+        }
+    }
     // ----------------------------------- Navigation Bar -----------------------
     
     private func getNavigationBar() -> some View

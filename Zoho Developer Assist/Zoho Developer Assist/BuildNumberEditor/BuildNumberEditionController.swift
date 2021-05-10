@@ -113,16 +113,9 @@ struct BuildNumberEditiorController
         for (_, row) in XCConfigurationListRows.enumerated()
         {
             let name = row.slice(from: "\"", to: "\"") ?? ""
-            var isDuplicate = false
+            let isPBXProject = row.contains("PBXProject")
             
-            resultTargets.forEach() { target in
-                if target.name == name
-                {
-                    isDuplicate = true
-                }
-            }
-            
-            if !isDuplicate
+            if !isPBXProject
             {
                 var tempTarget  = Target(name: name)
                 let lines = row.components(separatedBy: "\n")
