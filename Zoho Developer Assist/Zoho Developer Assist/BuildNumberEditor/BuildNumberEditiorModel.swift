@@ -12,6 +12,8 @@ struct Project: Hashable
     var file = ""
     var targets = [Target]()
     var selected = false
+    var isManualValue = false
+    var commonValue = ""
 }
 
 struct BuildConfig: Hashable
@@ -25,11 +27,18 @@ struct Target: Hashable
     var name = ""
     var buildConfig = [BuildConfig]()
     var buildNumber = ""
-    var manualBuildNumber = ""
     var versionNumber = ""
-    var needToAvoid = false
+    var newBuildNumber = ""
+    var newVersionNumber = ""
+    var manualNumber = ""
+    var selected = true
     var isTestTarget = false
     
+}
+
+enum Tool
+{
+    case none, buildNumberChanger
 }
 
 enum Postion: Hashable
@@ -48,13 +57,15 @@ enum Postion: Hashable
     }
 }
 
-struct EnumeratedForEach<ItemType, ContentView: View>: View {
+struct EnumeratedForEach<ItemType, ID , ContentView: View>: View {
     let data: [ItemType]
     let content: (Int, ItemType) -> ContentView
+    let id: KeyPath<Data.Element, ID>
     
-    init(_ data: [ItemType], @ViewBuilder content: @escaping (Int, ItemType) -> ContentView) {
+    init(_ data: [ItemType], id: KeyPath<Data.Element, ID>, @ViewBuilder content: @escaping (Int, ItemType) -> ContentView) {
         self.data = data
         self.content = content
+        self.id = id
     }
     
     var body: some View {
@@ -75,46 +86,38 @@ struct BuildNumberEditiorModel
     var isBuild = true
     var isNeedSync = false
     var incrementalValue = 1
+    var isFullyManual = false
     var postions = [Postion.other(1), Postion.other(2), Postion.last]
     var selectedPosition = Postion.last
     var excutableProjects = [Project]()
+    var isPreviouslyLoaded = false
     
     enum UserDefaultKeys: String
     {
-        case workspaceUrl, workspaceFormattedName, projectList, selectedProjectList, isSelectAllProject, isRemovePodAndFrameworkProject
+        case workspaceUrl, workspaceFormattedName, isSelectAllProject, isRemovePodAndFrameworkProject
     }
     
     mutating func loadData()
     {
         let defaults: UserDefaults = .standard
        
-//        workspaceUrl = defaults.value(forKey: UserDefaultKeys.workspaceUrl.rawValue) as? String ?? ""
-//        workspaceFormattedName = defaults.value(forKey: UserDefaultKeys.workspaceFormattedName.rawValue) as? String ?? ""
-//        projectList = defaults.value(forKey: UserDefaultKeys.projectList.rawValue) as? [String] ?? [""]
-//        selectedProjectList = defaults.value(forKey: UserDefaultKeys.selectedProjectList.rawValue) as? [String] ?? [""]
-//        isSelectAllProject = defaults.value(forKey: UserDefaultKeys.isSelectAllProject.rawValue) as? Bool ?? false
-//        isRemovePodAndFrameworkProject = defaults.value(forKey: UserDefaultKeys.isRemovePodAndFrameworkProject.rawValue) as? Bool ?? false
+        workspaceUrl = defaults.value(forKey: UserDefaultKeys.workspaceUrl.rawValue) as? String ?? ""
+        workspaceFormattedName = defaults.value(forKey: UserDefaultKeys.workspaceFormattedName.rawValue) as? String ?? ""
+        isSelectAllProject = defaults.value(forKey: UserDefaultKeys.isSelectAllProject.rawValue) as? Bool ?? false
+        isRemovePodAndFrameworkProject = defaults.value(forKey: UserDefaultKeys.isRemovePodAndFrameworkProject.rawValue) as? Bool ?? false
+        
+        isPreviouslyLoaded = true
     }
     
     func saveData()
     {
-        saveJson()
         let defaults: UserDefaults = .standard
         
-//        defaults.setValue(workspaceUrl, forKey: UserDefaultKeys.workspaceUrl.rawValue)
-//        defaults.setValue(workspaceFormattedName, forKey: UserDefaultKeys.workspaceFormattedName.rawValue)
-//        defaults.setValue(projectList, forKey: UserDefaultKeys.projectList.rawValue)
-//        defaults.setValue(selectedProjectList, forKey: UserDefaultKeys.selectedProjectList.rawValue)
-//        defaults.setValue(isSelectAllProject, forKey: UserDefaultKeys.isSelectAllProject.rawValue)
-//        defaults.setValue(isRemovePodAndFrameworkProject, forKey: UserDefaultKeys.isRemovePodAndFrameworkProject.rawValue)
+        defaults.setValue(workspaceUrl, forKey: UserDefaultKeys.workspaceUrl.rawValue)
+        defaults.setValue(workspaceFormattedName, forKey: UserDefaultKeys.workspaceFormattedName.rawValue)
+        defaults.setValue(isSelectAllProject, forKey: UserDefaultKeys.isSelectAllProject.rawValue)
+        defaults.setValue(isRemovePodAndFrameworkProject, forKey: UserDefaultKeys.isRemovePodAndFrameworkProject.rawValue)
     }
-//
 
-    func saveJson()
-    {
-        let json = "Hai THarun"
-
-        try! json.write(to: URL(fileURLWithPath: "/Users/tharun-pt3265/zohofinance_ios/testApp.Json"), atomically: true, encoding: String.Encoding.utf8)
-    }
     
 }

@@ -7,33 +7,30 @@
 
 import SwiftUI
 
-struct Collapsible<Content: View>: View
+struct Collapsible<Content: View, LabelContent: View>: View
 {
-    @State var label: () -> Text
+    @State var label: () -> HStack<LabelContent>
     @State var content: () -> Content
     
     @State private var collapsed: Bool = false
     
     var body: some View {
         VStack {
-            Button(
-                action: {
-                    self.collapsed.toggle()
-                        },
-                label: {
-                    HStack {
-                        self.label()
-                        Spacer()
-                        Image(systemName: self.collapsed ? "chevron.down": "chevron.up")
-                    }
-                    .padding(.bottom, 1)
-                    .background(Color.white.opacity(0.01))
-                }
-            )
-            .buttonStyle(PlainButtonStyle())
+            HStack
+            {
+                Image(systemName: self.collapsed ? "chevron.left": "chevron.down" )
+                self.label()
+                Spacer()
+            }
+            .onTapGesture
+            {
+                self.collapsed.toggle()
+            }
+            .padding(.bottom, 1)
+            .background(Color.white.opacity(0.01))
             
             VStack {
-                self.content()
+                self.content().allowsHitTesting(!collapsed)
             }
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: collapsed ? 0 : .none)
             .clipped()

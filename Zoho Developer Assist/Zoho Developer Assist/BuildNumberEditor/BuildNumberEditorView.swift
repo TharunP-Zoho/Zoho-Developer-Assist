@@ -9,6 +9,8 @@ import SwiftUI
 
 struct BuildNumberEditorView: View {
     
+    var backLink: Binding<Tool>
+    
     @State var controller = BuildNumberEditiorController()
     
     @State var openFileImport = false
@@ -16,8 +18,9 @@ struct BuildNumberEditorView: View {
     @State var fileImportAlertMsg = ""
     @State var isProgressViewNeeded = false
     @State var isPreviewReady = false
+    var isFirstLoad = true
     
-    var sasd: Binding<String>? = nil
+    
     var body: some View {
         
         Text("Build Number Changes")
@@ -27,9 +30,10 @@ struct BuildNumberEditorView: View {
         
         VStack(alignment: .leading)
         {
-            ScrollView
+            ScrollView(showsIndicators: false)
             {
-            contentView()
+                contentView()
+                    .onAppear(perform: { self.viewDidLoad() })
             }
             .padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
             
@@ -39,6 +43,11 @@ struct BuildNumberEditorView: View {
         
         
                 
+    }
+    
+    private func viewDidLoad()
+    {
+        isProgressViewNeeded = controller.model.isPreviouslyLoaded
     }
     
     private func contentView() -> some View
@@ -87,7 +96,19 @@ struct BuildNumberEditorView: View {
     // ----------------------------------- WorkSpace -----------------------
     private func getWorkspaceInfo() -> some View
     {
-        HStack{
+        if isFirstLoad
+        {
+            if !controller.model.workspaceFormattedName.isEmpty
+            {
+                controller.searchProjectList() { (fullList, projectList) in
+                    controller.model.fullProjectList = fullList
+                    controller.model.projectList = projectList
+                    isProgressViewNeeded = false
+                }
+            }
+        }
+        
+        return HStack{
             Text("Workspace :")
                 .bold()
             
@@ -213,6 +234,12 @@ struct BuildNumberEditorView: View {
             Text("Configuration :")
                 .bold()
             
+            Picker("Method :", selection: $controller.model.isFullyManual, content: {
+                    Text("Auto").tag(false)
+                    Text("Manual").tag(true)
+            })
+            .pickerStyle(SegmentedPickerStyle())
+            .frame(width: 120, height: nil, alignment: .leading)
            
             Picker("Type :", selection: $controller.model.isBuild, content: {
                             Text("Version").tag(true)
@@ -280,30 +307,75 @@ struct BuildNumberEditorView: View {
     private func getPreview() -> some View
     {
         
-        EnumeratedForEach(controller.model.excutableProjects){ (projectIndex, project) in
+        EnumeratedForEach(controller.model.excutableProjects, id: \.self){ (projectIndex, project) in
             
-            Collapsible( label: { Text(project.file.fileName.removeExtension) },
-                            content: {
-                                
-                                EnumeratedForEach(project.targets, content: { (targetIndex, target) in
-                                    
-                                    HStack{
-                                        Text("\(target.name) : \(target.buildNumber) -> ")
-                                        TextField(target.buildNumber, text: $controller.model.excutableProjects[projectIndex].targets[targetIndex].manualBuildNumber)
+            VStack
+            {
+                //Number
+                Collapsible( label:
+                                {
+                                    HStack
+                                    {
+                                        Text(project.file.fileName.removeExtension)
                                         Spacer()
+                                        Picker("", selection: $controller.model.excutableProjects[projectIndex].isManualValue)
+                                        {
+                                            Text("Auto").tag(false)
+                                            Text("Manual").tag(true)
+                                        }
+                                        .pickerStyle(SegmentedPickerStyle())
+                                        .frame(width: 100, height: nil, alignment: .leading)
+                                        
+                                        Text(controller.model.isBuild ? "Build : " : "Version : ")
+                                            .padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
+                                            .layoutPriority(10)
+                                        TextField(project.commonValue, text: $controller.model.excutableProjects[projectIndex].commonValue)
+                                            .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
+                                            .frame(width: 75)
+                                            .layoutPriority(10)
+                                        
                                     }
-                                    Divider()
-                                    
                                 })
-                                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
-                                .frame(maxWidth: .infinity)
+                {
+                    
+                    VStack(alignment: .leading)
+                    {
+                        EnumeratedForEach(project.targets, id: \.self, content: { (targetIndex, target) in
+                            
+                            if target.isTestTarget
+                            { EmptyView() }
+                            else
+                            {
+                            
+                                HStack
+                                {
+                                    Toggle("", isOn: $controller.model.excutableProjects[projectIndex].targets[targetIndex].selected)
+                                    HStack {
+                                        Text("\(target.name)")
+                                        Spacer()
+                                    }.frame(width: 300)
+                                    
+                                    if controller.model.excutableProjects[projectIndex].isManualValue
+                                    {
+                                        TextField("0.0", text: $controller.model.excutableProjects[projectIndex].commonValue).frame(width: 75)
+                                    }
+                                    else
+                                    {
+                                        Text("\(target.buildNumber)")
+                                    }
+                                    Spacer()
+                                }
+                                Divider()
                             }
-                        )
-            .animation(.easeOut)
-                        .transition(.slide)
+                        })
+                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
                         .frame(maxWidth: .infinity)
+                    }
+                    
+                }.animation(.easeOut).transition(.slide).frame(maxWidth: .infinity)
             
-            Divider()
+                Divider()
+            }
         }
     }
     // ----------------------------------- Navigation Bar -----------------------
@@ -318,6 +390,7 @@ struct BuildNumberEditorView: View {
                 
             
             HStack(alignment: .center, spacing: nil){
+                Button("Back", action: { backLink.wrappedValue = .none })
                 Spacer()
                 Button("Save", action: { controller.model.saveData() })
             }
@@ -352,8 +425,3 @@ struct MultipleSelectionRow: View {
     
 }
 
-struct BuildNumberEditorView_Previews: PreviewProvider {
-    static var previews: some View {
-        BuildNumberEditorView()
-    }
-}

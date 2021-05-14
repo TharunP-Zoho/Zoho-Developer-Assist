@@ -60,6 +60,74 @@ extension String {
         return self.slice(from: configBegin, to: configEnd) ?? ""
     }
     
+    func getIncreasedLastDigit(for increament: Int) -> String?
+    {
+         var components = self.components(separatedBy: ".")
+        
+         if let lastValue = components.last
+         {
+            if let integer = Int(lastValue)
+            {
+                let newInteger = "\(integer + increament)"
+                
+                components.removeLast()
+                components.append(newInteger)
+                
+                return components.joined(separator: ".")
+            }
+         }
+        
+        return nil
+    }
+    
+    func getIncreasedVersionNumber(for increament: Int, position: Postion) -> String?
+    {
+        switch position
+        {
+        case .last:
+            return getIncreasedLastDigit(for: increament)
+        case .other(let place):
+            
+            let components = self.components(separatedBy: ".")
+            
+            if place < components.count
+            {
+               if let integer = Int(components[place-1])
+               {
+                    let newInteger = "\(integer + increament)"
+                   
+                    var temp = [String]()
+                
+                    for i in 1...components.count
+                    {
+                        if i < place
+                        {
+                            temp.append(components[i-1])
+                        }
+                        else if i == place
+                        {
+                            temp.append(newInteger)
+                        }
+                        else if i > place
+                        {
+                            temp.append("0")
+                        }
+                    }
+                   
+                   return temp.joined(separator: ".")
+               }
+            }
+            else if place == components.count
+            {
+                return getIncreasedLastDigit(for: increament)
+            }
+            
+        }
+       
+       return nil
+    }
+    
+    
     
     
     

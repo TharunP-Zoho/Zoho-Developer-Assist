@@ -12,7 +12,7 @@
 		73A3EED2264577E80012E2BD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 73A3EED1264577E80012E2BD /* Assets.xcassets */; };
 		73A3EED5264577E80012E2BD /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 73A3EED4264577E80012E2BD /* Preview Assets.xcassets */; };
 		73A3EEDE2645797D0012E2BD /* WindowSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEDD2645797D0012E2BD /* WindowSize.swift */; };
-		73A3EEE626459A290012E2BD /* ButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEE526459A290012E2BD /* ButtonStyle.swift */; };
+		73A3EEE626459A290012E2BD /* ToolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEE526459A290012E2BD /* ToolView.swift */; };
 		73A3EEE826459D540012E2BD /* BuildNumberEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEE726459D540012E2BD /* BuildNumberEditorView.swift */; };
 		73A3EEEA26463FD50012E2BD /* BuildNumberEditiorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEE926463FD50012E2BD /* BuildNumberEditiorModel.swift */; };
 		73A3EEEC264640070012E2BD /* BuildNumberEditionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEEB264640070012E2BD /* BuildNumberEditionController.swift */; };
@@ -34,7 +34,7 @@
 		73A3EED6264577E80012E2BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		73A3EED7264577E80012E2BD /* Zoho_Developer_Assist.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Zoho_Developer_Assist.entitlements; sourceTree = "<group>"; };
 		73A3EEDD2645797D0012E2BD /* WindowSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSize.swift; sourceTree = "<group>"; };
-		73A3EEE526459A290012E2BD /* ButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyle.swift; sourceTree = "<group>"; };
+		73A3EEE526459A290012E2BD /* ToolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolView.swift; sourceTree = "<group>"; };
 		73A3EEE726459D540012E2BD /* BuildNumberEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildNumberEditorView.swift; sourceTree = "<group>"; };
 		73A3EEE926463FD50012E2BD /* BuildNumberEditiorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildNumberEditiorModel.swift; sourceTree = "<group>"; };
 		73A3EEEB264640070012E2BD /* BuildNumberEditionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildNumberEditionController.swift; sourceTree = "<group>"; };
@@ -130,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				73A3EECF264577E50012E2BD /* HomeView.swift */,
+				73A3EEE526459A290012E2BD /* ToolView.swift */,
 				73A3EEFD2649535F0012E2BD /* Collapsible.swift */,
 			);
 			path = Views;
@@ -138,7 +139,6 @@
 		73A3EEE426459A090012E2BD /* Styles */ = {
 			isa = PBXGroup;
 			children = (
-				73A3EEE526459A290012E2BD /* ButtonStyle.swift */,
 			);
 			path = Styles;
 			sourceTree = "<group>";
@@ -229,7 +229,7 @@
 				73A3EEF6264657600012E2BD /* String+Extension.swift in Sources */,
 				73A3EEF5264657600012E2BD /* URL+Extension.swift in Sources */,
 				73A3EEEC264640070012E2BD /* BuildNumberEditionController.swift in Sources */,
-				73A3EEE626459A290012E2BD /* ButtonStyle.swift in Sources */,
+				73A3EEE626459A290012E2BD /* ToolView.swift in Sources */,
 				73A3EEFE2649535F0012E2BD /* Collapsible.swift in Sources */,
 				73A3EEEA26463FD50012E2BD /* BuildNumberEditiorModel.swift in Sources */,
 				73A3EEE826459D540012E2BD /* BuildNumberEditorView.swift in Sources */,

@@ -163,10 +163,26 @@ struct BuildNumberEditiorController
             
             resultTargets[index].versionNumber = XCBuildConfigurationRow.slice(from: "MARKETING_VERSION = ", to: ";") ?? ""
             resultTargets[index].buildNumber = XCBuildConfigurationRow.slice(from: "CURRENT_PROJECT_VERSION = ", to: ";") ?? ""
+            
+            if resultTargets[index].versionNumber.isEmpty || resultTargets[index].buildNumber.isEmpty
+            {
+                resultTargets[index].selected = false
+            }
         }
         
         return resultTargets
     }
     
-    
+    func computeValue(for model: BuildNumberEditiorModel, complationHandler: (BuildNumberEditiorModel) -> Void)
+    {
+        var tempModel = model
+        
+        for (projectIndex, project) in  tempModel.excutableProjects.enumerated()
+        {
+            for (targetIndex, target) in  project.targets.enumerated()
+            {
+                
+            }
+        }
+    }
 }
