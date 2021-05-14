@@ -96,9 +96,9 @@ class FileParser
             var stringOfFile = try String(contentsOfFile: path.string)
             for _ in 0...
             {
-                if let value = stringOfFile.slice(from: trimForm, to: trimTo){ranges in
+                if let value = stringOfFile.slice(from: trimForm, to: trimTo, completionHnadler: {ranges in
                     stringOfFile.replaceSubrange(ranges, with: "%")
-                }
+                })
                 {
                     //test
                     if value == "service is over" || value == "service is over"

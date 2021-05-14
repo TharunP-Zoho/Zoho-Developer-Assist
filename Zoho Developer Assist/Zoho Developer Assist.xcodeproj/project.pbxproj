@@ -23,6 +23,8 @@
 		73A3EEFA2646AEE80012E2BD /* BuildNumberEditorPerview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEF92646AEE80012E2BD /* BuildNumberEditorPerview.swift */; };
 		73A3EEFC2648559A0012E2BD /* Regex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEFB2648559A0012E2BD /* Regex.swift */; };
 		73A3EEFE2649535F0012E2BD /* Collapsible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEFD2649535F0012E2BD /* Collapsible.swift */; };
+		73E4677A264E649F00950F29 /* ToolList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73E46779264E649F00950F29 /* ToolList.swift */; };
+		73E4677C264E64C600950F29 /* ToolEnumeration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73E4677B264E64C500950F29 /* ToolEnumeration.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +47,8 @@
 		73A3EEF92646AEE80012E2BD /* BuildNumberEditorPerview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildNumberEditorPerview.swift; sourceTree = "<group>"; };
 		73A3EEFB2648559A0012E2BD /* Regex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Regex.swift; sourceTree = "<group>"; };
 		73A3EEFD2649535F0012E2BD /* Collapsible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collapsible.swift; sourceTree = "<group>"; };
+		73E46779264E649F00950F29 /* ToolList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolList.swift; sourceTree = "<group>"; };
+		73E4677B264E64C500950F29 /* ToolEnumeration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolEnumeration.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,6 +122,7 @@
 		73A3EEE2264585620012E2BD /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				73E46778264E648700950F29 /* Utility */,
 				73A3EEE426459A090012E2BD /* Styles */,
 				73A3EEE3264599F60012E2BD /* Views */,
 				73A3EEDD2645797D0012E2BD /* WindowSize.swift */,
@@ -151,6 +156,15 @@
 				73A3EEF22646575F0012E2BD /* String+Extension.swift */,
 				73A3EEF12646575F0012E2BD /* URL+Extension.swift */,
 				73A3EEFB2648559A0012E2BD /* Regex.swift */,
+			);
+			path = Utility;
+			sourceTree = "<group>";
+		};
+		73E46778264E648700950F29 /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				73E46779264E649F00950F29 /* ToolList.swift */,
+				73E4677B264E64C500950F29 /* ToolEnumeration.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -227,6 +241,7 @@
 				73A3EEDE2645797D0012E2BD /* WindowSize.swift in Sources */,
 				73A3EEF7264657600012E2BD /* FileManager+Extension.swift in Sources */,
 				73A3EEF6264657600012E2BD /* String+Extension.swift in Sources */,
+				73E4677C264E64C600950F29 /* ToolEnumeration.swift in Sources */,
 				73A3EEF5264657600012E2BD /* URL+Extension.swift in Sources */,
 				73A3EEEC264640070012E2BD /* BuildNumberEditionController.swift in Sources */,
 				73A3EEE626459A290012E2BD /* ToolView.swift in Sources */,
@@ -234,6 +249,7 @@
 				73A3EEEA26463FD50012E2BD /* BuildNumberEditiorModel.swift in Sources */,
 				73A3EEE826459D540012E2BD /* BuildNumberEditorView.swift in Sources */,
 				73A3EED0264577E50012E2BD /* HomeView.swift in Sources */,
+				73E4677A264E649F00950F29 /* ToolList.swift in Sources */,
 				73A3EECE264577E50012E2BD /* Zoho_Developer_AssistApp.swift in Sources */,
 				73A3EEF8264657600012E2BD /* FileParser.swift in Sources */,
 				73A3EEFA2646AEE80012E2BD /* BuildNumberEditorPerview.swift in Sources */,

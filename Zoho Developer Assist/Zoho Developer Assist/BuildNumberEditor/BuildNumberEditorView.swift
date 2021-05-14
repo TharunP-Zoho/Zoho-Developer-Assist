@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BuildNumberEditorView: View {
     
-    var backLink: Binding<Tool>
+    var backHandler: () -> Void
     
     @State var controller = BuildNumberEditiorController()
     
@@ -23,11 +23,6 @@ struct BuildNumberEditorView: View {
     
     var body: some View {
         
-        Text("Build Number Changes")
-            .bold()
-            .font(.title3)
-            .padding(EdgeInsets(top: 10, leading: 0, bottom: 0, trailing: 0))
-        
         VStack(alignment: .leading)
         {
             ScrollView(showsIndicators: false)
@@ -35,11 +30,11 @@ struct BuildNumberEditorView: View {
                 contentView()
                     .onAppear(perform: { self.viewDidLoad() })
             }
-            .padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10))
+            .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 15))
             
             getNavigationBar()
         }
-        .padding(EdgeInsets(top: 20, leading: 0, bottom: 10, trailing: 0))
+        .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
         
         
                 
@@ -390,11 +385,11 @@ struct BuildNumberEditorView: View {
                 
             
             HStack(alignment: .center, spacing: nil){
-                Button("Back", action: { backLink.wrappedValue = .none })
+                Button("Back", action: { backHandler() })
                 Spacer()
                 Button("Save", action: { controller.model.saveData() })
             }
-            .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+            .padding()
         }
     }
     

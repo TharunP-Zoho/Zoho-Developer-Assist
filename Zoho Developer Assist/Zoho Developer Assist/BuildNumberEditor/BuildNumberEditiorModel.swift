@@ -36,11 +36,6 @@ struct Target: Hashable
     
 }
 
-enum Tool
-{
-    case none, buildNumberChanger
-}
-
 enum Postion: Hashable
 {
     case other(Int), last
