@@ -25,10 +25,6 @@ struct HomeView: View {
     
     var body: some View {
         
-        ZStack{
-            
-            getBackgroundView()
-        
             VStack{
                 
                 getTitleAnimation()
@@ -44,9 +40,6 @@ struct HomeView: View {
                 {
                     getHomeView()
                 }
-             
-            }
-            
         }
 
         
@@ -154,20 +147,6 @@ struct HomeView: View {
             .matchedGeometryEffect(id: "stack", in: animation)
         }
         }
-    }
-    
-    private func getBackgroundView() -> some View
-    {
-        GeometryReader{ geo in
-
-            VStack
-            {
-
-            }.onAppear(perform: { DispatchQueue.main.asyncAfter(deadline: .now() + 0.3){isBackgroundScrolling = false}})
-
-        }
-
-        
     }
   
 }

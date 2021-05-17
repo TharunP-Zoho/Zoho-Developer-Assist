@@ -15,7 +15,8 @@ struct BuildNumberEditorView: View {
     
     @State var openFileImport = false
     @State var isFileImportAlert = false
-    @State var fileImportAlertMsg = ""
+    @State var alertTitle = ""
+    @State var alertMsg = ""
     @State var isProgressViewNeeded = false
     @State var isPreviewReady = false
     var isFirstLoad = true
@@ -95,10 +96,19 @@ struct BuildNumberEditorView: View {
         {
             if !controller.model.workspaceFormattedName.isEmpty
             {
-                controller.searchProjectList() { (fullList, projectList) in
-                    controller.model.fullProjectList = fullList
-                    controller.model.projectList = projectList
-                    isProgressViewNeeded = false
+                controller.searchProjectList() { result in
+                    
+                    switch result
+                    {
+                    case .success(let (fullList, projectList)):
+                        controller.model.fullProjectList = fullList
+                        controller.model.projectList = projectList
+                        isProgressViewNeeded = false
+                        
+                    case .failure(let error):
+                        alertMsg = error.description
+                        isFileImportAlert = true
+                    }
                 }
             }
         }
@@ -111,7 +121,7 @@ struct BuildNumberEditorView: View {
             {
                 Button("Choose the Workspace", action: { openFileImport = true })
                     .fileImporter(isPresented: $openFileImport, allowedContentTypes: [.folder]){ result in
-                        fileSelected(result)
+                        fileSelected(result.resultWithCustomError(errorTitle: "Invalid File Path"))
                     }.alert(isPresented: $isFileImportAlert, content: {
                         showFileImportAlert()
                     })
@@ -121,7 +131,7 @@ struct BuildNumberEditorView: View {
                 Text(controller.model.workspaceFormattedName)
                 Button("Change", action: { openFileImport = true })
                     .fileImporter(isPresented: $openFileImport, allowedContentTypes: [.folder]){ result in
-                        fileSelected(result)
+                        fileSelected(result.resultWithCustomError(errorTitle: "Invalid File Path"))
                     }.alert(isPresented: $isFileImportAlert, content: {
                         showFileImportAlert()
                     })
@@ -129,7 +139,7 @@ struct BuildNumberEditorView: View {
         }
     }
     
-    private func fileSelected(_ result:  Result<URL, Error>)
+    private func fileSelected(_ result:  Result<URL, CustomError>)
     {
         switch result {
         
@@ -137,14 +147,24 @@ struct BuildNumberEditorView: View {
             controller.model.workspaceUrl = url.string
             controller.model.workspaceFormattedName =  controller.model.workspaceUrl.fileName
             isProgressViewNeeded = true
-            controller.searchProjectList() { (fullList, projectList) in
-                controller.model.fullProjectList = fullList
-                controller.model.projectList = projectList
-                isProgressViewNeeded = false
+            controller.searchProjectList() { result in
+                
+                switch result
+                {
+                case .success(let (fullList, projectList)):
+                    controller.model.fullProjectList = fullList
+                    controller.model.projectList = projectList
+                    isProgressViewNeeded = false
+                
+                case .failure(let error):
+                    alertMsg = error.description
+                    isFileImportAlert = true
+                
+                }
             }
             
         case .failure(let error):
-            fileImportAlertMsg = error.localizedDescription
+            alertMsg = error.description
             isFileImportAlert = true
             
         }
@@ -152,7 +172,7 @@ struct BuildNumberEditorView: View {
     
     private func showFileImportAlert() -> Alert
     {
-        Alert(title: Text("File Path Error"), message: Text(fileImportAlertMsg), dismissButton: .cancel())
+        Alert(title: Text(alertMsg), message: Text(alertMsg), dismissButton: .cancel())
     }
     
     
@@ -177,7 +197,7 @@ struct BuildNumberEditorView: View {
                                                                              projectList: controller.model.projectList,
                                                                              isSelectAllProject: controller.model.isSelectAllProject,
                                                                              isRemovePodAndFrameworkProject: controller.model.isRemovePodAndFrameworkProject,
-                                                                             isTakeValueFromOld: false)
+                                                                             isTakeValueFromOld: false, errorHandler: {_ in})
                     
                 }
                 
@@ -189,7 +209,7 @@ struct BuildNumberEditorView: View {
                     controller.model.projectList = controller.getProjectList(fullProjectList: controller.model.fullProjectList,
                                                                              projectList: controller.model.projectList,
                                                                              isSelectAllProject: controller.model.isSelectAllProject,
-                                                                             isRemovePodAndFrameworkProject: controller.model.isRemovePodAndFrameworkProject)
+                                                                             isRemovePodAndFrameworkProject: controller.model.isRemovePodAndFrameworkProject, errorHandler: {_ in})
                     
                     
                 }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
@@ -237,8 +257,8 @@ struct BuildNumberEditorView: View {
             .frame(width: 120, height: nil, alignment: .leading)
            
             Picker("Type :", selection: $controller.model.isBuild, content: {
-                            Text("Version").tag(true)
-                            Text("Build").tag(false)
+                            Text("Version").tag(false)
+                            Text("Build").tag(true)
             })
             .pickerStyle(SegmentedPickerStyle())
             .frame(width: 300, height: nil, alignment: .leading)
@@ -387,7 +407,9 @@ struct BuildNumberEditorView: View {
             HStack(alignment: .center, spacing: nil){
                 Button("Back", action: { backHandler() })
                 Spacer()
-                Button("Save", action: { controller.model.saveData() })
+                Button("Save", action: {
+                        controller.model.saveData()
+                })
             }
             .padding()
         }

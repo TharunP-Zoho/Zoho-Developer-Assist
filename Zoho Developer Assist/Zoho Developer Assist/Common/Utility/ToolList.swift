@@ -101,7 +101,7 @@ struct ToolList: Hashable
         Image(image)
             .resizable()
             .scaledToFit()
-            .frame(width: 200, height: 200)
+            .frame(width: 120, height: 120)
     }
     
 }

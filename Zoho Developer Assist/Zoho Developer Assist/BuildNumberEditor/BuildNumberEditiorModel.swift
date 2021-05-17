@@ -7,6 +7,25 @@
 
 import SwiftUI
 
+struct CustomError: Error
+{
+    var title: String
+    var description: String
+}
+
+extension Result
+{
+    func resultWithCustomError(errorTitle: String) -> Result<Success, CustomError>
+    {
+        switch self {
+        case .success(let sucess):
+            return .success(sucess)
+        case .failure(let error):
+            return .failure(CustomError(title: errorTitle, description: error.localizedDescription))
+        }
+    }
+}
+
 struct Project: Hashable
 {
     var file = ""
@@ -14,6 +33,8 @@ struct Project: Hashable
     var selected = false
     var isManualValue = false
     var commonValue = ""
+    var sampleBuildNumber = ""
+    var sampleVersionNumber = ""
 }
 
 struct BuildConfig: Hashable

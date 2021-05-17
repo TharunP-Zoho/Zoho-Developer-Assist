@@ -17,7 +17,7 @@ struct BuildNumberEditiorController
     }
     
     
-    func searchProjectList(complationHandler: @escaping ([String],[Project]) -> Void)
+    func searchProjectList(complationHandler: @escaping (Result<([String],[Project]), CustomError>) -> Void)
     {
         let safeModel = model
         let safeSelf = self
@@ -29,17 +29,28 @@ struct BuildNumberEditiorController
                 .filter{ path in path.pathExtension == FileParser.FileExtension.xcodeproj.rawValue }
                 .compactMap(){ url in url.string }
             
-            let tempProjectList = safeSelf.getProjectList(fullProjectList: tempFullProjectList, projectList: safeModel.projectList, isSelectAllProject: safeModel.isSelectAllProject, isRemovePodAndFrameworkProject: safeModel.isRemovePodAndFrameworkProject)
+            let tempProjectList = safeSelf.getProjectList(fullProjectList: tempFullProjectList, projectList: safeModel.projectList, isSelectAllProject: safeModel.isSelectAllProject, isRemovePodAndFrameworkProject: safeModel.isRemovePodAndFrameworkProject){error in
+                DispatchQueue.main.async
+                {
+                    complationHandler(.failure(error))
+                }}
             
             DispatchQueue.main.async
             {
-                complationHandler(tempFullProjectList, tempProjectList)
+                if tempFullProjectList.isEmpty && tempProjectList.isEmpty
+                {
+                    complationHandler(.failure(CustomError(title: "No Projects Found", description: "There is no project file found in the selected workspace")))
+                }
+                else
+                {
+                    complationHandler(.success((tempFullProjectList, tempProjectList)))
+                }
             }
         }
 
     }
     
-    func getProjectList(fullProjectList: [String], projectList: [Project], isSelectAllProject: Bool, isRemovePodAndFrameworkProject: Bool, isTakeValueFromOld: Bool = true) -> [Project]
+    func getProjectList(fullProjectList: [String], projectList: [Project], isSelectAllProject: Bool, isRemovePodAndFrameworkProject: Bool, isTakeValueFromOld: Bool = true, errorHandler: (CustomError) -> Void) -> [Project]
     {
         func getSelectedValueForFileFromProjectList(projectList: [Project], fileName: String) -> Bool
         {
@@ -55,13 +66,29 @@ struct BuildNumberEditiorController
             return value
         }
         
+        func getSampleVersionAndBuildNumber(for projectFile: String) -> (version: String, build: String)
+        {
+            let projectFileString = FileManager.default.readFile(url: projectFile + "/project.pbxproj", errorHandler: errorHandler)
+            
+            var versionNumber = Regex.matches(for: "MARKETING_VERSION = ([0-9]+(.[0-9]+)+)", soruce: projectFileString).first ?? "THarun"
+            versionNumber = versionNumber.replacingOccurrences(of: "MARKETING_VERSION = ", with: "")
+            
+            var buildNumber = Regex.matches(for: "CURRENT_PROJECT_VERSION = ([0-9]+(.[0-9]+)+)", soruce: projectFileString).first ?? "Tharun"
+            buildNumber = buildNumber.replacingOccurrences(of: "CURRENT_PROJECT_VERSION = ", with: "")
+            
+            return (versionNumber, buildNumber)
+            
+        }
+        
         var tempProjectList = [Project]()
         
         fullProjectList.forEach(){ projectFile in
             
             if (!((projectFile.fileName.removeExtension.lowercased().contains("kit") || projectFile.fileName.removeExtension.lowercased().contains("pod")) && isRemovePodAndFrameworkProject))
             {
-                tempProjectList.append(Project(file: projectFile, selected: isSelectAllProject ? true : (isTakeValueFromOld ? getSelectedValueForFileFromProjectList(projectList: projectList, fileName: projectFile) : false)))
+                let sample = getSampleVersionAndBuildNumber(for: projectFile)
+                
+                tempProjectList.append(Project(file: projectFile, selected: isSelectAllProject ? true : (isTakeValueFromOld ? getSelectedValueForFileFromProjectList(projectList: projectList, fileName: projectFile) : false), sampleBuildNumber: sample.build, sampleVersionNumber: sample.version))
             }
         }
         
@@ -69,7 +96,7 @@ struct BuildNumberEditiorController
     }
     
     
-    func getExcutableProjects(projectList: [Project], complationHandler: @escaping (Result<[Project], Error>) -> Void)
+    func getExcutableProjects(projectList: [Project], complationHandler: @escaping (Result<[Project], CustomError>) -> Void)
     {
         DispatchQueue.global(qos: .userInitiated).async
         {
@@ -94,7 +121,7 @@ struct BuildNumberEditiorController
         
     }
     
-    func getTargetsForProject(_ project: Project, errorHandler: (Error) -> Void) -> [Target]
+    func getTargetsForProject(_ project: Project, errorHandler: (CustomError) -> Void) -> [Target]
     {
         var resultTargets = [Target]()
         
@@ -175,11 +202,11 @@ struct BuildNumberEditiorController
     
     func computeValue(for model: BuildNumberEditiorModel, complationHandler: (BuildNumberEditiorModel) -> Void)
     {
-        var tempModel = model
+        let tempModel = model
         
-        for (projectIndex, project) in  tempModel.excutableProjects.enumerated()
+        for (_, project) in  tempModel.excutableProjects.enumerated()
         {
-            for (targetIndex, target) in  project.targets.enumerated()
+            for (_, target) in  project.targets.enumerated()
             {
                 
             }

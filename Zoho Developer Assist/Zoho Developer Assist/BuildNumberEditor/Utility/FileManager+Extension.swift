@@ -25,7 +25,7 @@ extension FileManager
         })
     }
     
-    func readFile(url: String, errorHandler: (Error) -> Void) -> String
+    func readFile(url: String, errorHandler: (CustomError) -> Void) -> String
     {
         var fileContent = ""
         
@@ -35,7 +35,7 @@ extension FileManager
         }
         catch
         {
-            errorHandler(error)
+            errorHandler(CustomError(title: "File Path Incorrect", description: error.localizedDescription))
         }
         
         return fileContent
