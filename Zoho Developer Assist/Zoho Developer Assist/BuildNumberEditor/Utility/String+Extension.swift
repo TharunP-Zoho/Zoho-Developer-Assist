@@ -60,6 +60,18 @@ extension String {
         return self.slice(from: configBegin, to: configEnd) ?? ""
     }
     
+    //MARK:- BuildNumber Changing Func
+    
+    func getBuildNumberType() -> BuildNumberType
+    {
+        if self.contains(".")
+        {
+            return .combineLastTwoWithHunderMutiple
+        }
+        
+        return .plain
+    }
+    
     func getIncreasedLastDigit(for increament: Int) -> String?
     {
          var components = self.components(separatedBy: ".")
@@ -68,7 +80,7 @@ extension String {
          {
             if let integer = Int(lastValue)
             {
-                let newInteger = "\(integer + increament)"
+                let newInteger = "\((integer + increament).safeValue)"
                 
                 components.removeLast()
                 components.append(newInteger)
@@ -94,7 +106,7 @@ extension String {
             {
                if let integer = Int(components[place-1])
                {
-                    let newInteger = "\(integer + increament)"
+                let newInteger = "\((integer + increament).safeValue)"
                    
                     var temp = [String]()
                 
@@ -128,6 +140,44 @@ extension String {
     }
     
     
+    func getBuildNumberFromVersion(type: BuildNumberType) -> String?
+    {
+       switch type {
+       case .plain:
+           return "0"
+       case .combineLastTwoWithHunderMutiple:
+            
+        let components = self.components(separatedBy: ".")
+        if components.count > 2
+        {
+            if let fristDouble = Double("\(components[0]).\(components[1])")
+            {
+                
+                var tempString = [String]()
+                for i in 1...components.count
+                {
+                    if i == 1
+                    {
+                        tempString.append("\(Int(fristDouble * 100))")
+                    }
+                    else if i == components.count
+                    {
+                        tempString.append("0")
+                    }
+                    else if i > 1
+                    {
+                        tempString.append(components[i])
+                    }
+                }
+                
+                return tempString.joined(separator: ".")
+            }
+        }
+           
+       }
+        
+        return nil
+    }
     
     
     
@@ -142,7 +192,7 @@ extension String {
     
     
     
-    //
+    //MARK:- Unwanted
     
     func checkIfTextContains() -> Bool
     {

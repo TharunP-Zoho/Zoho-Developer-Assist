@@ -35,6 +35,85 @@ struct Project: Hashable
     var commonValue = ""
     var sampleBuildNumber = ""
     var sampleVersionNumber = ""
+    
+    mutating func computeValue(incrementalValue: Int, postion: Postion, isBuildNumberChange: Bool) -> Result<Project, CustomError>
+    {
+        var buildNumberIssueFiles = [String]()
+        var versionNumberIssueFiles = [String]()
+        
+        for (index, target) in targets.enumerated() where target.selected && !target.isTestTarget
+        {
+            if isManualValue
+            {
+                if isBuildNumberChange
+                {
+                    targets[index].newBuildNumber = commonValue
+                }
+                else
+                {
+                    targets[index].newVersionNumber = commonValue
+                    
+                    if let builNumber = targets[index].newVersionNumber.getBuildNumberFromVersion(type: target.buildNumber.getBuildNumberType())
+                    {
+                        targets[index].newBuildNumber = builNumber
+                    }
+                    else
+                    {
+                        buildNumberIssueFiles.append(target.name)
+                    }
+                }
+            }
+            else if isBuildNumberChange
+            {
+                if let buildNumber = target.buildNumber.getIncreasedVersionNumber(for: incrementalValue, position: .last)
+                {
+                    targets[index].newBuildNumber = buildNumber
+                }
+                else
+                {
+                    versionNumberIssueFiles.append(target.name)
+                }
+                
+            }
+            else
+            {
+                if let versionNumber = target.versionNumber.getIncreasedVersionNumber(for: incrementalValue, position: postion)
+                {
+                    targets[index].newVersionNumber = versionNumber
+                }
+                else
+                {
+                    versionNumberIssueFiles.append(target.name)
+                }
+                
+                if let builNumber = targets[index].newVersionNumber.getBuildNumberFromVersion(type: target.buildNumber.getBuildNumberType())
+                {
+                    targets[index].newBuildNumber = builNumber
+                }
+                else
+                {
+                    buildNumberIssueFiles.append(target.name)
+                }
+            }
+        }
+        
+        if !buildNumberIssueFiles.isEmpty || !versionNumberIssueFiles.isEmpty
+        {
+            var errorString = "There is an issue in \(file.fileName.removeExtension) project"
+            if !buildNumberIssueFiles.isEmpty
+            {
+                errorString += "\nBuild number generation error for file(s) - \(buildNumberIssueFiles.joined(separator: ","))"
+            }
+            if !versionNumberIssueFiles.isEmpty
+            {
+                errorString += "\nVersion number generation error for file(s) - \(versionNumberIssueFiles.joined(separator: ","))"
+            }
+            
+            return .failure(CustomError(title: "Unable to Generate Number", description: errorString))
+        }
+
+        return .success(self)
+    }
 }
 
 struct BuildConfig: Hashable
@@ -51,7 +130,6 @@ struct Target: Hashable
     var versionNumber = ""
     var newBuildNumber = ""
     var newVersionNumber = ""
-    var manualNumber = ""
     var selected = true
     var isTestTarget = false
     
@@ -73,23 +151,11 @@ enum Postion: Hashable
     }
 }
 
-struct EnumeratedForEach<ItemType, ID , ContentView: View>: View {
-    let data: [ItemType]
-    let content: (Int, ItemType) -> ContentView
-    let id: KeyPath<Data.Element, ID>
-    
-    init(_ data: [ItemType], id: KeyPath<Data.Element, ID>, @ViewBuilder content: @escaping (Int, ItemType) -> ContentView) {
-        self.data = data
-        self.content = content
-        self.id = id
-    }
-    
-    var body: some View {
-        ForEach(Array(self.data.enumerated()), id: \.offset) { idx, item in
-            self.content(idx, item)
-        }
-    }
+enum BuildNumberType
+{
+   case plain, combineLastTwoWithHunderMutiple
 }
+
 
 struct BuildNumberEditiorModel
 {

@@ -200,16 +200,25 @@ struct BuildNumberEditiorController
         return resultTargets
     }
     
-    func computeValue(for model: BuildNumberEditiorModel, complationHandler: (BuildNumberEditiorModel) -> Void)
+    func computeValue(for model: BuildNumberEditiorModel, completionHandler: @escaping (Result<BuildNumberEditiorModel, CustomError>) -> Void)
     {
-        let tempModel = model
-        
-        for (_, project) in  tempModel.excutableProjects.enumerated()
+        DispatchQueue.global(qos: .userInitiated).async
         {
-            for (_, target) in  project.targets.enumerated()
+            var resultModel = model
+            
+            for (index, project) in  resultModel.excutableProjects.enumerated()
             {
-                
+                var tempProject = project
+                switch tempProject.computeValue(incrementalValue: model.incrementalValue, postion: model.selectedPosition, isBuildNumberChange: model.isBuild)
+                {
+                case .success(let newProject):
+                    resultModel.excutableProjects[index] = newProject
+                case .failure(let error):
+                    DispatchQueue.main.async { completionHandler(.failure(error)) }
+                }
             }
+            
+            DispatchQueue.main.async { completionHandler(.success(resultModel)) }
         }
     }
 }

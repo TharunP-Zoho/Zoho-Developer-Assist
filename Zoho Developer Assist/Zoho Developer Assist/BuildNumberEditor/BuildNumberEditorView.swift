@@ -14,7 +14,7 @@ struct BuildNumberEditorView: View {
     @State var controller = BuildNumberEditiorController()
     
     @State var openFileImport = false
-    @State var isFileImportAlert = false
+    @State var isAlertNeeded = false
     @State var alertTitle = ""
     @State var alertMsg = ""
     @State var isProgressViewNeeded = false
@@ -60,7 +60,7 @@ struct BuildNumberEditorView: View {
                 projectSelectionView()
                 Divider()
                 
-                getBuilNumberChange()
+                getBuilNumberSettings()
                 Divider()
                 
                 Spacer()
@@ -89,7 +89,7 @@ struct BuildNumberEditorView: View {
     }
     
     
-    // ----------------------------------- WorkSpace -----------------------
+    //MARK: WorkSpace
     private func getWorkspaceInfo() -> some View
     {
         if isFirstLoad
@@ -106,8 +106,9 @@ struct BuildNumberEditorView: View {
                         isProgressViewNeeded = false
                         
                     case .failure(let error):
+                        alertTitle = error.title
                         alertMsg = error.description
-                        isFileImportAlert = true
+                        isAlertNeeded = true
                     }
                 }
             }
@@ -122,8 +123,8 @@ struct BuildNumberEditorView: View {
                 Button("Choose the Workspace", action: { openFileImport = true })
                     .fileImporter(isPresented: $openFileImport, allowedContentTypes: [.folder]){ result in
                         fileSelected(result.resultWithCustomError(errorTitle: "Invalid File Path"))
-                    }.alert(isPresented: $isFileImportAlert, content: {
-                        showFileImportAlert()
+                    }.alert(isPresented: $isAlertNeeded, content: {
+                        showAlert()
                     })
             }
             else
@@ -132,8 +133,8 @@ struct BuildNumberEditorView: View {
                 Button("Change", action: { openFileImport = true })
                     .fileImporter(isPresented: $openFileImport, allowedContentTypes: [.folder]){ result in
                         fileSelected(result.resultWithCustomError(errorTitle: "Invalid File Path"))
-                    }.alert(isPresented: $isFileImportAlert, content: {
-                        showFileImportAlert()
+                    }.alert(isPresented: $isAlertNeeded, content: {
+                        showAlert()
                     })
             }
         }
@@ -157,26 +158,28 @@ struct BuildNumberEditorView: View {
                     isProgressViewNeeded = false
                 
                 case .failure(let error):
+                    alertTitle = error.title
                     alertMsg = error.description
-                    isFileImportAlert = true
+                    isAlertNeeded = true
                 
                 }
             }
             
         case .failure(let error):
+            alertTitle = error.title
             alertMsg = error.description
-            isFileImportAlert = true
+            isAlertNeeded = true
             
         }
     }
     
-    private func showFileImportAlert() -> Alert
+    private func showAlert() -> Alert
     {
-        Alert(title: Text(alertMsg), message: Text(alertMsg), dismissButton: .cancel())
+        Alert(title: Text(alertTitle), message: Text(alertMsg), dismissButton: .cancel())
     }
     
     
-    // ----------------------------------- Project Selection -----------------------
+    //MARK: Project Selection
     
     private func projectSelectionView() -> some View
     {
@@ -240,9 +243,9 @@ struct BuildNumberEditorView: View {
         }
     }
     
-    // ----------------------------------- Build Number -----------------------
+    //MARK:  Build Number Settings
     
-    private func getBuilNumberChange() -> some View
+    private func getBuilNumberSettings() -> some View
     {
         VStack(alignment: .leading, spacing: 15)
         {
@@ -260,64 +263,97 @@ struct BuildNumberEditorView: View {
                             Text("Version").tag(false)
                             Text("Build").tag(true)
             })
+            .onChange(of: controller.model.isBuild, perform: { _ in constructPreivew() })
             .pickerStyle(SegmentedPickerStyle())
             .frame(width: 300, height: nil, alignment: .leading)
             
-            HStack
+            if !controller.model.isFullyManual
             {
-                Text("Value :")
-                
-                Image(systemName: "arrowtriangle.left.fill").onTapGesture { controller.model.incrementalValue -= 1 }
-                
-                Text("\(controller.model.incrementalValue)")
-                
-                Image(systemName: "arrowtriangle.right.fill").onTapGesture { controller.model.incrementalValue += 1 }
-                
+                getBuilNumberChnage()
+            }
+        }
+        
+    }
+    
+    private func getBuilNumberChnage() -> some View
+    {
+        HStack
+        {
+            Text("Value :")
+            
+            Image(systemName: "arrowtriangle.left.fill").onTapGesture { controller.model.incrementalValue -= 1 }
+            
+            Text("\(controller.model.incrementalValue)")
+            
+            Image(systemName: "arrowtriangle.right.fill").onTapGesture { controller.model.incrementalValue += 1 }
+            
+            if !controller.model.isBuild
+            {
                 Picker("Position :", selection: $controller.model.selectedPosition) {
                     ForEach(controller.model.postions, id: \.self) { (index: Postion) in
                         Text(index.getString())
                     }
                 }
                 .frame(width: 200, height: nil, alignment: .leading)
-                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-                
-                Toggle("Need Sync", isOn: $controller.model.isNeedSync)
-                
+                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
             }
+            
+            Toggle("Need Sync", isOn: $controller.model.isNeedSync)
+                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
+            
         }
     }
     
-    // ----------------------------------- Preview Banner -----------------------
+    //MARK:  Preview Banner
     
     private func getPreviewButton() -> some View
     {
         HStack{
             Text("Let's check in preview")
             Spacer()
-            Button("Preview", action: {
-                isProgressViewNeeded = true
-                controller.getExcutableProjects(projectList: controller.model.projectList) { result in
-                    
-                    isProgressViewNeeded = false
-                    
-                    switch result
-                    {
-                    case .success(let projects):
-                        controller.model.excutableProjects = projects
-                    case .failure(let error):
-                        print("\(error.localizedDescription)")
-                    }
-                    
-                    isPreviewReady = true
-                }
-            })
+            Button("Preview", action: constructPreivew)
+            .alert(isPresented: $isAlertNeeded, content: showAlert)
         }
         .padding()
         .background(Color("PerviewBanner"))
         
-        
     }
-    // ----------------------------------- Preview ------------------------------
+    
+    private func constructPreivew()
+    {
+        isPreviewReady = false
+        isProgressViewNeeded = true
+        controller.getExcutableProjects(projectList: controller.model.projectList) { result in
+            
+            switch result
+            {
+            case .success(let projects):
+                controller.model.excutableProjects = projects
+            case .failure(let error):
+                alertTitle = error.title
+                alertMsg = error.description
+                isAlertNeeded = true
+            }
+            
+            controller.computeValue(for: controller.model){ result in
+                
+                isProgressViewNeeded = false
+                
+                switch result
+                {
+                case .success(let newModel):
+                    controller.model = newModel
+                case .failure(let error):
+                    alertTitle = error.title
+                    alertMsg = error.description
+                    isAlertNeeded = true
+                }
+                
+                isPreviewReady = true
+            }
+        }
+    }
+    //MARK:  Preview
     
     private func getPreview() -> some View
     {
@@ -376,7 +412,7 @@ struct BuildNumberEditorView: View {
                                     }
                                     else
                                     {
-                                        Text("\(target.buildNumber)")
+                                        Text(controller.model.isBuild ? target.newBuildNumber : target.newVersionNumber)
                                     }
                                     Spacer()
                                 }
@@ -393,7 +429,7 @@ struct BuildNumberEditorView: View {
             }
         }
     }
-    // ----------------------------------- Navigation Bar -----------------------
+    //MARK:  Navigation Bar
     
     private func getNavigationBar() -> some View
     {
