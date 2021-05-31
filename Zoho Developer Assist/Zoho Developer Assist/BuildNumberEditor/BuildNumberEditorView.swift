@@ -19,11 +19,14 @@ struct BuildNumberEditorView: View {
     @State var alertMsg = ""
     @State var isProgressViewNeeded = false
     @State var isPreviewReady = false
-    var isFirstLoad = true
+    @State var isconstructingPreivew = false
+    @State var isFirstLoad = true
     
     
     var body: some View {
         
+        if !isPreviewReady
+        {
         VStack(alignment: .leading)
         {
             ScrollView(showsIndicators: false)
@@ -36,7 +39,25 @@ struct BuildNumberEditorView: View {
             getNavigationBar()
         }
         .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
-        
+        }
+        else
+        {
+            VStack(alignment: .leading)
+            {
+                ScrollView(showsIndicators: false)
+                {
+                    getPreviewBanner()
+                        .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
+                    getPreview()
+                }
+                .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 15))
+                
+                getPreviewNavigationBar()
+            }
+            .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
+            .transition(AnyTransition.slide.combined(with: .opacity))
+            .animation(.default)
+        }
         
                 
     }
@@ -64,14 +85,6 @@ struct BuildNumberEditorView: View {
                 Divider()
                 
                 Spacer()
-                if isPreviewReady
-                {
-                    getPreview()
-                }
-                else
-                {
-                    getPreviewButton()
-                }
                 
             }
             
@@ -263,7 +276,6 @@ struct BuildNumberEditorView: View {
                             Text("Version").tag(false)
                             Text("Build").tag(true)
             })
-            .onChange(of: controller.model.isBuild, perform: { _ in constructPreivew() })
             .pickerStyle(SegmentedPickerStyle())
             .frame(width: 300, height: nil, alignment: .leading)
             
@@ -306,23 +318,22 @@ struct BuildNumberEditorView: View {
     
     //MARK:  Preview Banner
     
-    private func getPreviewButton() -> some View
+    private func getPreviewBanner() -> some View
     {
         HStack{
-            Text("Let's check in preview")
             Spacer()
-            Button("Preview", action: constructPreivew)
-            .alert(isPresented: $isAlertNeeded, content: showAlert)
+            Text("Let's check the preview")
+                .font(.title2)
+                .bold()
+            Spacer()
         }
         .padding()
-        .background(Color("PerviewBanner"))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color("PerviewBanner")))
         
     }
     
-    private func constructPreivew()
+    private func constructPreivew(completionHandler: @escaping () -> Void)
     {
-        isPreviewReady = false
-        isProgressViewNeeded = true
         controller.getExcutableProjects(projectList: controller.model.projectList) { result in
             
             switch result
@@ -337,19 +348,16 @@ struct BuildNumberEditorView: View {
             
             controller.computeValue(for: controller.model){ result in
                 
-                isProgressViewNeeded = false
-                
                 switch result
                 {
                 case .success(let newModel):
                     controller.model = newModel
+                    completionHandler()
                 case .failure(let error):
                     alertTitle = error.title
                     alertMsg = error.description
                     isAlertNeeded = true
                 }
-                
-                isPreviewReady = true
             }
         }
     }
@@ -443,6 +451,44 @@ struct BuildNumberEditorView: View {
             HStack(alignment: .center, spacing: nil){
                 Button("Back", action: { backHandler() })
                 Spacer()
+                Button(action: {
+                    isconstructingPreivew = true
+                    constructPreivew(){
+                        isPreviewReady = true
+                        isconstructingPreivew = false
+                    }
+                }, label: {
+                    HStack{
+                        if isconstructingPreivew
+                        {
+                            ProgressView()
+                                .scaleEffect(0.5)
+                        }
+                        else
+                        {
+                            Text("Preview")
+                        }
+                    }
+                })
+                .alert(isPresented: $isAlertNeeded, content: showAlert)
+            }
+            .padding()
+        }
+    }
+    
+    private func getPreviewNavigationBar() -> some View
+    {
+        VStack
+        {
+            Rectangle()
+                .stroke(Color.init(CGColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.5)), lineWidth: 0.5)
+                .frame(height: 0.5)
+                
+            
+            HStack(alignment: .center, spacing: nil){
+                Button("Back", action: { isPreviewReady = false })
+                Button("Back to Home", action: { backHandler() }).padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
+                Spacer()
                 Button("Save", action: {
                         controller.model.saveData()
                 })
@@ -450,8 +496,6 @@ struct BuildNumberEditorView: View {
             .padding()
         }
     }
-    
-    
         
 }
 
