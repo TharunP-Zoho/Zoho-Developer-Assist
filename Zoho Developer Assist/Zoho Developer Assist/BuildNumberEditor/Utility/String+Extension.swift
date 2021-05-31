@@ -60,6 +60,13 @@ extension String {
         return self.slice(from: configBegin, to: configEnd) ?? ""
     }
     
+    mutating func setSectionInProjectFile(sectionName: String, value: String)
+    {
+        let section = self.getSectionInProjectFile(sectionName: sectionName)
+        
+        self = self.replacingOccurrences(of: section, with: value)
+    }
+    
     //MARK:- BuildNumber Changing Func
     
     func getBuildNumberType() -> BuildNumberType

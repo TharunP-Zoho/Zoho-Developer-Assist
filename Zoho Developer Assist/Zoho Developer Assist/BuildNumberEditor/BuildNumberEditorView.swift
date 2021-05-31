@@ -490,8 +490,19 @@ struct BuildNumberEditorView: View {
                 Button("Back to Home", action: { backHandler() }).padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
                 Spacer()
                 Button("Save", action: {
-                        controller.model.saveData()
+                    controller.save{ result in
+                        switch result
+                        {
+                        case .success(_):
+                            break
+                        case .failure(let error):
+                        alertMsg = error.localizedDescription
+                        alertTitle = error.title
+                        isAlertNeeded = true
+                        }
+                    }
                 })
+                .alert(isPresented: $isAlertNeeded, content: showAlert)
             }
             .padding()
         }

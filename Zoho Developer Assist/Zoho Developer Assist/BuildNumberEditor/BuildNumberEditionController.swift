@@ -200,6 +200,104 @@ struct BuildNumberEditiorController
         return resultTargets
     }
     
+    func save(completionHandler: @escaping (Result<String, CustomError>) -> Void)
+    {
+        model.saveData()
+        
+        DispatchQueue.global(qos: .userInitiated).async
+        {
+            for project in model.excutableProjects
+            {
+                writeProject(forProject: project){ result in
+                    switch result
+                    {
+                    case .failure(let error):
+                        DispatchQueue.main.async
+                        {
+                            completionHandler(Result.failure(error))
+                        }
+                    default:
+                        break
+                    }
+                }
+            }
+            
+            DispatchQueue.main.async
+            {
+                completionHandler(Result.success(""))
+            }
+        }
+    }
+    
+    func writeProject(forProject project: Project, completionHandler: @escaping (Result<String, CustomError>) -> Void)
+    {
+        var projectFile = FileManager.default.readFile(url: project.file + "/project.pbxproj"){ error in completionHandler(.failure(error))}
+        
+        guard projectFile != "" else { completionHandler(.failure(CustomError(title: "Project File is Empty", description: "Unable to fetch the project file - \(project.file.fileName.removeExtension)"))); return }
+        
+        
+        var XCBuildConfigurationSection = projectFile.getSectionInProjectFile(sectionName: "XCBuildConfiguration")
+        
+        for (_, target) in project.targets.enumerated() where target.selected
+        {
+            for buildConfig in target.buildConfig
+            {
+                var sectionIntoToTwo = XCBuildConfigurationSection.components(separatedBy: buildConfig.id)
+                
+                if sectionIntoToTwo.count < 2
+                {
+                    completionHandler(.failure(CustomError(title: "Unable to Parse", description: "Issue in parsing the project file - \(project.file.fileName.removeExtension)")))
+                    return
+                }
+                
+                var secondPartOfTheSection = sectionIntoToTwo[1]
+                var XCBuildConfigurationRows = secondPartOfTheSection.components(separatedBy: "isa = XCBuildConfiguration;")
+                
+                if XCBuildConfigurationRows.count < 2
+                {
+                    completionHandler(.failure(CustomError(title: "Unable to Parse", description: "Issue in parsing the project file - \(project.file.fileName.removeExtension)")))
+                    return
+                }
+                
+                var XCBuildConfigurationRow = XCBuildConfigurationRows[1]
+                
+                if !(XCBuildConfigurationRow.contains("MARKETING_VERSION") && XCBuildConfigurationRow.contains("CURRENT_PROJECT_VERSION"))
+                {
+                    completionHandler(.failure(CustomError(title: "Unable to find version changes", description: "May be the version changes is first time for \(project.file.fileName.removeExtension) - \(target.name). So please try in Xcode for first time.")))
+                    return
+                }
+                
+                if model.isBuild
+                {
+                    XCBuildConfigurationRow = XCBuildConfigurationRow.replacingOccurrences(of: "CURRENT_PROJECT_VERSION = \(target.buildNumber);", with: "CURRENT_PROJECT_VERSION = \(target.newBuildNumber);")
+                }
+                else
+                {
+                    XCBuildConfigurationRow = XCBuildConfigurationRow.replacingOccurrences(of: "CURRENT_PROJECT_VERSION = \(target.buildNumber);", with: "CURRENT_PROJECT_VERSION = \(target.newBuildNumber);")
+                    XCBuildConfigurationRow = XCBuildConfigurationRow.replacingOccurrences(of: "MARKETING_VERSION = \(target.versionNumber);", with: "MARKETING_VERSION = \(target.newVersionNumber);")
+                }
+                
+                XCBuildConfigurationRows[1] = XCBuildConfigurationRow
+                secondPartOfTheSection = XCBuildConfigurationRows.joined(separator: "isa = XCBuildConfiguration;")
+                sectionIntoToTwo[1] = secondPartOfTheSection
+                XCBuildConfigurationSection = sectionIntoToTwo.joined(separator: buildConfig.id)
+                
+                projectFile.setSectionInProjectFile(sectionName: "XCBuildConfiguration", value: XCBuildConfigurationSection)
+            }
+        }
+        
+        do
+        {
+            try projectFile.write(to: URL(fileURLWithPath: project.file + "/project.pbxproj"), atomically: true, encoding: .utf8)
+        }
+        catch
+        {
+            completionHandler(.failure(CustomError(title: "Unable to Write Project - \(project.file.fileName.removeExtension)", description: error.localizedDescription)))
+        }
+        
+        completionHandler(.success(""))
+    }
+    
     func computeValue(for model: BuildNumberEditiorModel, completionHandler: @escaping (Result<BuildNumberEditiorModel, CustomError>) -> Void)
     {
         DispatchQueue.global(qos: .userInitiated).async
