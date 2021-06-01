@@ -19,13 +19,18 @@ struct BuildNumberEditorView: View {
     @State var alertMsg = ""
     @State var isProgressViewNeeded = false
     @State var isPreviewReady = false
+    @State var isSaving = false
     @State var isconstructingPreivew = false
     @State var isFirstLoad = true
+    
+    //progressHandling
+    @State var progressStatus: Float = 0.0
+    @State var currentProgressName = ""
     
     
     var body: some View {
         
-        if !isPreviewReady
+        if !isPreviewReady && !isSaving
         {
         VStack(alignment: .leading)
         {
@@ -40,7 +45,7 @@ struct BuildNumberEditorView: View {
         }
         .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
         }
-        else
+        else if isPreviewReady && !isSaving
         {
             VStack(alignment: .leading)
             {
@@ -57,6 +62,10 @@ struct BuildNumberEditorView: View {
             .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
             .transition(AnyTransition.slide.combined(with: .opacity))
             .animation(.default)
+        }
+        else if isSaving
+        {
+            getSavingView()
         }
         
                 
@@ -437,6 +446,49 @@ struct BuildNumberEditorView: View {
             }
         }
     }
+    
+    //MARK: Saving view
+    
+    private func getSavingView() -> some View
+    {
+        
+        return VStack
+        {
+            ProgressBar(value: $progressStatus)
+                .frame(width: 400, height: 10, alignment: .center)
+                .padding(EdgeInsets(top: 30, leading: 0, bottom: 0, trailing: 0))
+            HStack
+            {
+                if progressStatus == 1.0
+                {
+                    Image(systemName: "checkmark.circle")
+                        .scaleEffect(1.5)
+                        .foregroundColor(.green)
+                }
+                else
+                {
+                    ProgressView()
+                        .scaleEffect(0.5)
+                }
+                Text(currentProgressName)
+            }
+            
+            if progressStatus == 1.0
+            {
+                Button("Back to Home", action: { backHandler() })
+                    .frame(width: nil, height: 40, alignment: .center)
+                    
+            }
+            else
+            {
+                Button("", action: {})
+                    .frame(width: nil, height: 40, alignment: .center)
+                    .hidden()
+            }
+            
+        }
+    }
+    
     //MARK:  Navigation Bar
     
     private func getNavigationBar() -> some View
@@ -490,17 +542,25 @@ struct BuildNumberEditorView: View {
                 Button("Back to Home", action: { backHandler() }).padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
                 Spacer()
                 Button("Save", action: {
-                    controller.save{ result in
+                    isSaving = true
+                    controller.save(progessHandler: { currentItem, completedItem, totalItem in
+                            currentProgressName = currentItem
+                            progressStatus = Float(completedItem)/Float(totalItem)
+
+                    }, completionHandler: { result in
                         switch result
                         {
                         case .success(_):
-                            break
+                            progressStatus = 1.0
+                            currentProgressName = "Completed"
+                            completedSound()
+                            showLocalNotification(title: controller.model.isBuild ? "Build Number is changed successfully" : "Version Number is changed successfully", subtitle: "\(controller.model.workspaceFormattedName) -> \(controller.model.excutableProjects.compactMap{ $0.file.fileName.removeExtension}.joined(separator: ", "))")
                         case .failure(let error):
                         alertMsg = error.localizedDescription
                         alertTitle = error.title
                         isAlertNeeded = true
                         }
-                    }
+                    })
                 })
                 .alert(isPresented: $isAlertNeeded, content: showAlert)
             }

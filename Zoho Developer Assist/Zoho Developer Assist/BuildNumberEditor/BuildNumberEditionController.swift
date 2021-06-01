@@ -200,13 +200,24 @@ struct BuildNumberEditiorController
         return resultTargets
     }
     
-    func save(completionHandler: @escaping (Result<String, CustomError>) -> Void)
+    func save(progessHandler: @escaping (_ currentItem: String, _ totalItem: Int, _ completedItem: Int) -> Void, completionHandler: @escaping (Result<String, CustomError>) -> Void)
     {
+        guard model.excutableProjects.count > 0 else { completionHandler(Result.failure(CustomError(title: "Nothing Seleted", description: "")))
+            return }
+            
+        //progessHandler
+        let totalItem = model.excutableProjects.count
+        var currentItem = 0
+        
+        //First Time
+        progessHandler("Writing Project File - \(model.excutableProjects[0].file.fileName.removeExtension)", currentItem, totalItem)
+        
+        //Saving
         model.saveData()
         
         DispatchQueue.global(qos: .userInitiated).async
         {
-            for project in model.excutableProjects
+            for (index, project) in model.excutableProjects.enumerated()
             {
                 writeProject(forProject: project){ result in
                     switch result
@@ -216,8 +227,15 @@ struct BuildNumberEditiorController
                         {
                             completionHandler(Result.failure(error))
                         }
-                    default:
-                        break
+                    case .success(_):
+                        currentItem += 1
+                        DispatchQueue.main.async
+                        {
+                            if index + 1 < model.excutableProjects.count
+                            {
+                                progessHandler("Writing Project File - \(model.excutableProjects[index + 1].file.fileName.removeExtension)", currentItem, totalItem)
+                            }
+                        }
                     }
                 }
             }

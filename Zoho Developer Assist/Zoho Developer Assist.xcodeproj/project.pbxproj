@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		730B0B292663BF0F002F6F8D /* EnumeratedForEachView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 730B0B282663BF0F002F6F8D /* EnumeratedForEachView.swift */; };
 		730B0B2B2663D0D0002F6F8D /* Int+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 730B0B2A2663D0D0002F6F8D /* Int+Extension.swift */; };
+		73244A6C2665D5A90003BF1D /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73244A6B2665D5A90003BF1D /* ProgressBar.swift */; };
+		73244A6E2665E4210003BF1D /* CompletedSound.aiff in Resources */ = {isa = PBXBuildFile; fileRef = 73244A6D2665E4210003BF1D /* CompletedSound.aiff */; };
+		73244A702665E4A60003BF1D /* Feedbacks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73244A6F2665E4A60003BF1D /* Feedbacks.swift */; };
 		73A3EECE264577E50012E2BD /* Zoho_Developer_AssistApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EECD264577E50012E2BD /* Zoho_Developer_AssistApp.swift */; };
 		73A3EED0264577E50012E2BD /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EECF264577E50012E2BD /* HomeView.swift */; };
 		73A3EED2264577E80012E2BD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 73A3EED1264577E80012E2BD /* Assets.xcassets */; };
@@ -32,6 +35,9 @@
 /* Begin PBXFileReference section */
 		730B0B282663BF0F002F6F8D /* EnumeratedForEachView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumeratedForEachView.swift; sourceTree = "<group>"; };
 		730B0B2A2663D0D0002F6F8D /* Int+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Int+Extension.swift"; sourceTree = "<group>"; };
+		73244A6B2665D5A90003BF1D /* ProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBar.swift; sourceTree = "<group>"; };
+		73244A6D2665E4210003BF1D /* CompletedSound.aiff */ = {isa = PBXFileReference; lastKnownFileType = audio.aiff; path = CompletedSound.aiff; sourceTree = "<group>"; };
+		73244A6F2665E4A60003BF1D /* Feedbacks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feedbacks.swift; sourceTree = "<group>"; };
 		73A3EECA264577E50012E2BD /* Zoho Developer Assist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Zoho Developer Assist.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		73A3EECD264577E50012E2BD /* Zoho_Developer_AssistApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Zoho_Developer_AssistApp.swift; sourceTree = "<group>"; };
 		73A3EECF264577E50012E2BD /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -107,6 +113,7 @@
 		73A3EEDF264583E30012E2BD /* Resource */ = {
 			isa = PBXGroup;
 			children = (
+				73244A6D2665E4210003BF1D /* CompletedSound.aiff */,
 			);
 			path = Resource;
 			sourceTree = "<group>";
@@ -142,6 +149,7 @@
 				730B0B282663BF0F002F6F8D /* EnumeratedForEachView.swift */,
 				73A3EEE526459A290012E2BD /* ToolView.swift */,
 				73A3EEFD2649535F0012E2BD /* Collapsible.swift */,
+				73244A6B2665D5A90003BF1D /* ProgressBar.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -171,6 +179,7 @@
 			children = (
 				73E46779264E649F00950F29 /* ToolList.swift */,
 				73E4677B264E64C500950F29 /* ToolEnumeration.swift */,
+				73244A6F2665E4A60003BF1D /* Feedbacks.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -232,6 +241,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				73244A6E2665E4210003BF1D /* CompletedSound.aiff in Resources */,
 				73A3EED5264577E80012E2BD /* Preview Assets.xcassets in Resources */,
 				73A3EED2264577E80012E2BD /* Assets.xcassets in Resources */,
 			);
@@ -245,6 +255,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				73A3EEDE2645797D0012E2BD /* WindowSize.swift in Sources */,
+				73244A6C2665D5A90003BF1D /* ProgressBar.swift in Sources */,
 				73A3EEF7264657600012E2BD /* FileManager+Extension.swift in Sources */,
 				73A3EEF6264657600012E2BD /* String+Extension.swift in Sources */,
 				730B0B2B2663D0D0002F6F8D /* Int+Extension.swift in Sources */,
@@ -261,6 +272,7 @@
 				73A3EECE264577E50012E2BD /* Zoho_Developer_AssistApp.swift in Sources */,
 				73A3EEF8264657600012E2BD /* FileParser.swift in Sources */,
 				73A3EEFA2646AEE80012E2BD /* BuildNumberEditorPerview.swift in Sources */,
+				73244A702665E4A60003BF1D /* Feedbacks.swift in Sources */,
 				73A3EEFC2648559A0012E2BD /* Regex.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
