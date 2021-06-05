@@ -738,15 +738,15 @@ struct BuildNumberEditorView: View {
         
         currentProgressName = progressList[progress].itemName
         progressStatus = Float(progress)/Float(totalItem)
+        if progressStatus == 1.0
+        {
+            currentProgressName = "Completed"
+        }
         
         if progress > 0 && progressList.count > progress
         {
             progressList[progress - 1].state = .completed
         }
-        
-//
-//            progressStatus = 1.0
-//            currentProgressName = "Completed"
     }
         
 }
