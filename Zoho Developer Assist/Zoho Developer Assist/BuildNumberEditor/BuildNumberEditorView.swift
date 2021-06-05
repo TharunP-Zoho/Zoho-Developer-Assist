@@ -34,10 +34,7 @@ struct BuildNumberEditorView: View {
     
     var body: some View {
         
-        ZStack{
-            
             contentView()
-        }
     }
     
     private func viewDidLoad()
@@ -86,6 +83,15 @@ struct BuildNumberEditorView: View {
         else if isSaving // Saving View
         {
             getSavingView()
+        }
+        
+        //Hack to show alert on async process
+        if isAlertNeeded
+        {
+            Text("Error")
+                .frame(width: 0.0001, height: 0.0001, alignment: .leading)
+                .alert(isPresented: $isAlertNeeded, content: showAlert)
+                
         }
             
         }
@@ -214,7 +220,12 @@ struct BuildNumberEditorView: View {
     
     private func showAlert() -> Alert
     {
-        Alert(title: Text(alertTitle), message: Text(alertMsg), dismissButton: .cancel())
+        Alert(title: Text(alertTitle), message: Text(alertMsg), dismissButton: .cancel({
+            if isSaving
+            {
+                isSaving = false
+            }
+        }))
     }
     
     
@@ -595,7 +606,7 @@ struct BuildNumberEditorView: View {
             }
             else if !needToShowProgressDetails
             {
-                Button("Show more Details", action: { needToShowProgressDetails.toggle() })
+                Button("Show more Details", action: { needToShowProgressDetails.toggle()})
                     .frame(width: nil, height: 40, alignment: .center)
             }
             
@@ -675,7 +686,6 @@ struct BuildNumberEditorView: View {
                         }
                     }
                 })
-                .alert(isPresented: $isAlertNeeded, content: showAlert)
             }
             .padding()
         }
@@ -693,39 +703,50 @@ struct BuildNumberEditorView: View {
                 Button("Back", action: { isPreviewReady = false })
                 Button("Back to Home", action: { backHandler() }).padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
                 Spacer()
-                Button("Save", action: {
-                    isSaving = true
-                    progressList = controller.getProgressList()
-                    controller.save(progessHandler: { currentItem, completedItem, totalItem in
-                            currentProgressName = currentItem
-                            progressStatus = Float(completedItem)/Float(totalItem)
-                            if completedItem > 0 && progressList.count > completedItem
-                            {
-                                progressList[completedItem - 1].state = .completed
-                            }
-
-                    }, completionHandler: { result in
-                        switch result
-                        {
-                        case .success(_):
-                            progressStatus = 1.0
-                            currentProgressName = "Completed"
-                            progressList.markAllCompleted()
-                            completedSound()
-                            showLocalNotification(title: controller.model.isBuild ? "Build Number is changed successfully" : "Version Number is changed successfully", subtitle: "\(controller.model.workspaceFormattedName) -> \(controller.model.excutableProjects.compactMap{ $0.file.fileName.removeExtension}.joined(separator: ", "))")
-                            
-                        case .failure(let error):
-                        progressList.markOthersAsFailed()
-                        alertMsg = error.localizedDescription
-                        alertTitle = error.title
-                        isAlertNeeded = true
-                        }
-                    })
-                })
-                .alert(isPresented: $isAlertNeeded, content: showAlert)
+                Button("Save", action: { save() })
             }
             .padding()
         }
+    }
+    
+    private func save()
+    {
+        isSaving = true
+        
+        progressList = controller.getProgressList()
+        
+        controller.save(progessHandler: progessHandler, completionHandler: { result in
+            switch result
+            {
+            case .success(_):
+                progressList.markAllCompleted()
+                completedSound()
+                showLocalNotification(title: controller.model.isBuild ? "Build Number is changed successfully" : "Version Number is changed successfully", subtitle: "\(controller.model.workspaceFormattedName) -> \(controller.model.excutableProjects.compactMap{ $0.file.fileName.removeExtension}.joined(separator: ", "))")
+                
+            case .failure(let error):
+                progressList.markOthersAsFailed()
+                alertMsg = error.description
+                alertTitle = error.title
+                isAlertNeeded = true
+            }
+        })
+    }
+    
+    private func progessHandler(progress: Int)
+    {
+        let totalItem = progressList.count
+        
+        currentProgressName = progressList[progress].itemName
+        progressStatus = Float(progress)/Float(totalItem)
+        
+        if progress > 0 && progressList.count > progress
+        {
+            progressList[progress - 1].state = .completed
+        }
+        
+//
+//            progressStatus = 1.0
+//            currentProgressName = "Completed"
     }
         
 }

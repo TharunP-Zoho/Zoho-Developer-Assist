@@ -215,6 +215,25 @@ extension String {
         return result
     }
     
+    func getUrlForFolder(_ givenFolder: String) -> String
+    {
+        var result = "/"
+        
+        let folders = self.components(separatedBy: "/")
+        
+        for folder in folders
+        {
+            result += (folder + "/")
+            
+            if givenFolder == folder
+            {
+                return result
+            }
+        }
+        
+        return result
+    }
+    
     
     
     

@@ -14,8 +14,8 @@
             filePath = "Zoho Developer Assist/Zoho Developer Assist/BuildNumberEditor/BuildNumberEditorView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "540"
-            endingLineNumber = "540"
+            startingLineNumber = "551"
+            endingLineNumber = "551"
             landmarkName = "getPreview()"
             landmarkType = "7">
          </BreakpointContent>

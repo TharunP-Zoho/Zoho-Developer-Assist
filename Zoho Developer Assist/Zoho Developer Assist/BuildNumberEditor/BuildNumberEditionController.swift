@@ -200,48 +200,76 @@ struct BuildNumberEditiorController
         return resultTargets
     }
     
-    func save(progessHandler: @escaping (_ currentItem: String, _ completedItem: Int, _ totalItem: Int) -> Void, completionHandler: @escaping (Result<String, CustomError>) -> Void)
+    func save(progessHandler: @escaping (Int) -> Void, completionHandler: @escaping (Result<String, CustomError>) -> Void)
     {
-        guard model.excutableProjects.count > 0 else { completionHandler(Result.failure(CustomError(title: "Nothing Seleted", description: "")))
-            return }
+        func sendResult(_ result: Result<String, CustomError>) -> Bool
+        {
+            switch result
+            {
+            case .failure(let error):
+                DispatchQueue.main.async
+                {
+                    completionHandler(.failure(error))
+                }
+                return false
+            case .success(_):
+                DispatchQueue.main.async
+                {
+                    progessHandler(progressCount)
+                    progressCount += 1
+                }
+                return true
+            }
+        }
+        
+        var progressCount = 0
+        var canProceed = true
+        
+        guard model.excutableProjects.count > 0 else {  completionHandler(Result.failure(CustomError(title: "Nothing Seleted", description: "")))
+            return}
             
-        //progessHandler
-        let totalItem = model.excutableProjects.count
-        var currentItem = 0
         //First Time
-        progessHandler("Writing Project File - \(model.excutableProjects[0].file.fileName.removeExtension)", currentItem, totalItem)
+        progessHandler(progressCount)
+        progressCount += 1
         
         //Saving
         model.saveData()
         
         DispatchQueue.global(qos: .userInitiated).async
         {
-            for (index, project) in model.excutableProjects.enumerated()
+            //Git Check status
+            let git = Git(repoLocation: model.workspaceUrl.getUrlForFolder(model.gitLocation))
+            
+            if canProceed && model.isGitNeeded
             {
-                writeProject(forProject: project){ result in
-                    switch result
+                let result = self.gitStatusCheck(git)
+                canProceed = sendResult(result)
+            }
+            
+            //Writing Project
+            if canProceed
+            {
+                for project in model.excutableProjects
+                {
+                    writeProject(forProject: project){ result in
+                        canProceed = sendResult(result)
+                    }
+                    
+                    if !canProceed
                     {
-                    case .failure(let error):
-                        DispatchQueue.main.async
-                        {
-                            completionHandler(Result.failure(error))
-                        }
-                    case .success(_):
-                        currentItem += 1
-                        DispatchQueue.main.async
-                        {
-                            if index + 1 < model.excutableProjects.count
-                            {
-                                progessHandler("Writing Project File - \(model.excutableProjects[index + 1].file.fileName.removeExtension)", currentItem, totalItem)
-                            }
-                        }
+                        break
                     }
                 }
             }
             
-            DispatchQueue.main.async
+            //SuccessfullCompeleted
+            if canProceed
             {
-                completionHandler(Result.success(""))
+                DispatchQueue.main.async
+                {
+                    progessHandler(progressCount)
+                    completionHandler(Result.success(""))
+                }
             }
         }
     }
@@ -250,12 +278,44 @@ struct BuildNumberEditiorController
     {
         var progressList = [ProgressItem]()
         
+        if model.isGitNeeded
+        {
+            progressList.append(ProgressItem(itemName: "Checking Git status", state: .processing))
+        }
+        
         for project in self.model.excutableProjects
         {
             progressList.append(ProgressItem(itemName: "Writing Project File - \(project.file.fileName.removeExtension)", state: .processing))
         }
         
+        
         return progressList
+    }
+    
+    func gitStatusCheck(_ git: Git) -> Result<String, CustomError>
+    {
+        let status = git.cmd("status")
+        
+        if status.code == 0
+        {
+            if status.result.contains("nothing to commit")
+            {
+                return .success("")
+            }
+            else if status.result.contains("Changes to be committed:") || status.result.contains("Untracked files:")
+            {
+                return .failure(CustomError(title: "Uncommitted changed found in Git", description: "Looks like some of the changes is not committed, please commit the changes and try again or discard the changes"))
+            }
+        }
+        else if status.code == 1
+        {
+            if status.result.contains("SSL certificate")
+            {
+                return .failure(CustomError(title: "VPN is not Connected", description: "Please connect your VPN and try again"))
+            }
+        }
+        
+        return .failure(CustomError(title: "Something went wrong, Check the below git result", description: status.result))
     }
     
     func writeProject(forProject project: Project, completionHandler: @escaping (Result<String, CustomError>) -> Void)
@@ -326,6 +386,8 @@ struct BuildNumberEditiorController
         
         completionHandler(.success(""))
     }
+    
+    //MARK: Compute
     
     func computeValue(for model: BuildNumberEditiorModel, completionHandler: @escaping (Result<BuildNumberEditiorModel, CustomError>) -> Void)
     {     let strTerminalPath = "/Users/tharun-pt3265/zohofinance_ios/"
