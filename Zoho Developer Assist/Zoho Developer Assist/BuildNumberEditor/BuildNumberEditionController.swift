@@ -108,7 +108,7 @@ struct BuildNumberEditiorController
                 {
                     excutableProjects.append(Project(file: project.file, targets: getTargetsForProject(project){ error in
                         complationHandler(Result.failure(error))
-                    }, selected: project.selected))
+                    }, selected: project.selected, sampleBuildNumber: project.sampleBuildNumber, sampleVersionNumber: project.sampleVersionNumber))
                 }
                 
             }
@@ -200,7 +200,7 @@ struct BuildNumberEditiorController
         return resultTargets
     }
     
-    func save(progessHandler: @escaping (_ currentItem: String, _ totalItem: Int, _ completedItem: Int) -> Void, completionHandler: @escaping (Result<String, CustomError>) -> Void)
+    func save(progessHandler: @escaping (_ currentItem: String, _ completedItem: Int, _ totalItem: Int) -> Void, completionHandler: @escaping (Result<String, CustomError>) -> Void)
     {
         guard model.excutableProjects.count > 0 else { completionHandler(Result.failure(CustomError(title: "Nothing Seleted", description: "")))
             return }
@@ -208,7 +208,6 @@ struct BuildNumberEditiorController
         //progessHandler
         let totalItem = model.excutableProjects.count
         var currentItem = 0
-        
         //First Time
         progessHandler("Writing Project File - \(model.excutableProjects[0].file.fileName.removeExtension)", currentItem, totalItem)
         
@@ -245,6 +244,18 @@ struct BuildNumberEditiorController
                 completionHandler(Result.success(""))
             }
         }
+    }
+    
+    func getProgressList() -> [ProgressItem]
+    {
+        var progressList = [ProgressItem]()
+        
+        for project in self.model.excutableProjects
+        {
+            progressList.append(ProgressItem(itemName: "Writing Project File - \(project.file.fileName.removeExtension)", state: .processing))
+        }
+        
+        return progressList
     }
     
     func writeProject(forProject project: Project, completionHandler: @escaping (Result<String, CustomError>) -> Void)
@@ -317,15 +328,31 @@ struct BuildNumberEditiorController
     }
     
     func computeValue(for model: BuildNumberEditiorModel, completionHandler: @escaping (Result<BuildNumberEditiorModel, CustomError>) -> Void)
-    {
+    {     let strTerminalPath = "/Users/tharun-pt3265/zohofinance_ios/"
+        
+        let git = Git(repoLocation: strTerminalPath)
+        print(git.cmd("add --all").result)
+        
         DispatchQueue.global(qos: .userInitiated).async
         {
             var resultModel = model
             
+            if model.isNeedSync
+            {
+                resultModel.excutableProjects.syncNumber(incrementValue: model.incrementalValue, postion: model.selectedPosition, isBuild: model.isBuild)
+            }
+            else
+            {
+                for (index, _) in model.excutableProjects.enumerated()
+                {
+                    resultModel.excutableProjects[index].incrementalValue = model.incrementalValue
+                }
+            }
+            
             for (index, project) in  resultModel.excutableProjects.enumerated()
             {
                 var tempProject = project
-                switch tempProject.computeValue(incrementalValue: model.incrementalValue, postion: model.selectedPosition, isBuildNumberChange: model.isBuild)
+                switch tempProject.computeValue(postion: model.selectedPosition, isBuildNumberChange: model.isBuild)
                 {
                 case .success(let newProject):
                     resultModel.excutableProjects[index] = newProject

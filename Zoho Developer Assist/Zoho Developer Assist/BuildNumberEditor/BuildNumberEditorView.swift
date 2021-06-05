@@ -26,26 +26,45 @@ struct BuildNumberEditorView: View {
     //progressHandling
     @State var progressStatus: Float = 0.0
     @State var currentProgressName = ""
+    @State var progressList = [ProgressItem]()
+    @State var needToShowProgressDetails = false
     
+    //GitAlert
+    @State var isGitAlertNeeded = true
     
     var body: some View {
         
-        if !isPreviewReady && !isSaving
-        {
-        VStack(alignment: .leading)
-        {
-            ScrollView(showsIndicators: false)
-            {
-                contentView()
-                    .onAppear(perform: { self.viewDidLoad() })
-            }
-            .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 15))
+        ZStack{
             
-            getNavigationBar()
+            contentView()
         }
-        .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
+    }
+    
+    private func viewDidLoad()
+    {
+        isProgressViewNeeded = controller.model.isPreviouslyLoaded
+    }
+    
+    private func contentView() -> some View
+    {
+        VStack{
+            
+        if !isPreviewReady && !isSaving // Configuration View
+        {
+            VStack(alignment: .leading)
+            {
+                ScrollView(showsIndicators: false)
+                {
+                    configurationView()
+                        .onAppear(perform: { self.viewDidLoad() })
+                }
+                .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 15))
+                
+                getNavigationBar()
+            }
+            .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
         }
-        else if isPreviewReady && !isSaving
+        else if isPreviewReady && !isSaving // Preview View
         {
             VStack(alignment: .leading)
             {
@@ -62,21 +81,18 @@ struct BuildNumberEditorView: View {
             .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
             .transition(AnyTransition.slide.combined(with: .opacity))
             .animation(.default)
+            
         }
-        else if isSaving
+        else if isSaving // Saving View
         {
             getSavingView()
         }
-        
-                
+            
+        }
     }
     
-    private func viewDidLoad()
-    {
-        isProgressViewNeeded = controller.model.isPreviouslyLoaded
-    }
     
-    private func contentView() -> some View
+    private func configurationView() -> some View
     {
         
         VStack(alignment: .leading, spacing: 15)
@@ -93,7 +109,8 @@ struct BuildNumberEditorView: View {
                 getBuilNumberSettings()
                 Divider()
                 
-                Spacer()
+                getGitSettings()
+                Divider()
                 
             }
             
@@ -325,7 +342,105 @@ struct BuildNumberEditorView: View {
         }
     }
     
-    //MARK:  Preview Banner
+    //MARK: Git Settings
+    
+    private func getGitSettings() -> some View
+    {
+        VStack(alignment: .leading, spacing: 15)
+        {
+            Toggle("Git", isOn: $controller.model.isGitNeeded)
+            
+            if controller.model.isGitNeeded
+            {
+                if isGitAlertNeeded
+                {
+                    HStack(spacing: 5) {
+                        Image(systemName: "info.circle.fill")
+                            .font(.body)
+                            .foregroundColor(.white)
+                            
+                        Text("Please Make Sure, your current branch has no uncommitted changes.")
+                            .font(.body)
+                            .foregroundColor(.white)
+                        
+                        Spacer()
+                        
+                        Button("Got it", action: {isGitAlertNeeded = false})
+                            
+                    }
+                    .padding()
+                    .background(Color.orange)
+                    .onAppear(){ DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: { isGitAlertNeeded = false }) }
+                    .transition(AnyTransition.slide.combined(with: .opacity))
+                    .animation(.easeOut)
+                }
+                
+                
+                Picker("Git Location :", selection: $controller.model.gitLocation, content: {
+                    ForEach(controller.model.workspaceUrl.getFolderList(), id: \.self) { folder in
+                        Text(folder)
+                    }
+                })
+                .pickerStyle(SegmentedPickerStyle())
+                
+                Toggle("Creat New branch and do this change", isOn: $controller.model.needToCreateNewBranch)
+                
+                Toggle("Raise Merge Request", isOn: $controller.model.needToRaiseMR)
+                
+                if controller.model.needToRaiseMR
+                {
+                    VStack(alignment: .leading)
+                    {
+                        Text("Title : Auto Generate")
+                            .foregroundColor(.gray)
+                            .frame(height: 30)
+                        Text("Description : Auto Generate (If need to add any point use \"Comments\"")
+                            .foregroundColor(.gray)
+                            .frame(height: 30)
+                        
+                        HStack{
+                            Text("Assignee : ")
+                                .frame(width: 70, height: 30, alignment: .leading)
+                            TextField("", text: $controller.model.mrAssign)
+                                .frame(width: 120, height: 30)
+                            
+                        }
+                        HStack{
+                            Text("Label : ")
+                                .frame(width: 70, height: 30, alignment: .leading)
+                            TextField("", text: $controller.model.mrLabel)
+                                .frame(width: 120, height: 30)
+                            
+                        }
+                        HStack{
+                            Text("Milestone : ")
+                                .frame(width: 70, height: 30, alignment: .leading)
+                            TextField("", text: $controller.model.mrMilestone)
+                                .frame(width: 120, height: 30)
+                        }
+                        
+                    }
+                    .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 0))
+                    
+                    VStack(alignment: .leading)
+                    {
+                        HStack
+                        {
+                            Text("Comments")
+                            Text("(This will be add to the MR Description)")
+                            .foregroundColor(.gray)
+                        }
+                        TextEditor(text: $controller.model.commitMsg)
+                            .multilineTextAlignment(.leading)
+                            .frame(minHeight: 70)
+                    }
+                }
+                
+            }
+        }.animation(.default)
+    }
+    
+    //MARK: Preview Banner
     
     private func getPreviewBanner() -> some View
     {
@@ -451,12 +566,11 @@ struct BuildNumberEditorView: View {
     
     private func getSavingView() -> some View
     {
-        
-        return VStack
+        VStack
         {
             ProgressBar(value: $progressStatus)
                 .frame(width: 400, height: 10, alignment: .center)
-                .padding(EdgeInsets(top: 30, leading: 0, bottom: 0, trailing: 0))
+                .padding(EdgeInsets(top: 30, leading: 0, bottom: 10, trailing: 0))
             HStack
             {
                 if progressStatus == 1.0
@@ -479,13 +593,52 @@ struct BuildNumberEditorView: View {
                     .frame(width: nil, height: 40, alignment: .center)
                     
             }
-            else
+            else if !needToShowProgressDetails
             {
-                Button("", action: {})
+                Button("Show more Details", action: { needToShowProgressDetails.toggle() })
                     .frame(width: nil, height: 40, alignment: .center)
-                    .hidden()
             }
             
+            if needToShowProgressDetails
+            {
+                ScrollView
+                {
+                    VStack(alignment: .leading, spacing: nil)
+                    {
+                        ForEach(progressList.indices, id: \.self) { index in
+                            
+                            HStack{
+                                if progressList[index].state == .completed
+                                {
+                                    Image(systemName: "checkmark.circle")
+                                        .scaleEffect(1.5)
+                                        .foregroundColor(.green)
+                                        .frame(width: 40, height: 40, alignment: .center)
+                                }
+                                if progressList[index].state == .failed
+                                {
+                                    Image(systemName: "xmark.circle")
+                                        .scaleEffect(1.5)
+                                        .foregroundColor(.red)
+                                        .frame(width: 40, height: 40, alignment: .center)
+                                }
+                                if progressList[index].state == .processing
+                                {
+                                    ProgressView()
+                                        .scaleEffect(0.5)
+                                        .frame(width: 40, height: 40, alignment: .center)
+                                }
+                                Text(progressList[index].itemName)
+                            }
+                        }
+                    }
+                }
+                .overlay(
+                        RoundedRectangle(cornerRadius: 5)
+                            .stroke(Color.gray, lineWidth: 1)
+                    )
+                .padding(EdgeInsets(top: 10, leading: 5, bottom: 50, trailing: 5))
+            }
         }
     }
     
@@ -536,16 +689,20 @@ struct BuildNumberEditorView: View {
                 .stroke(Color.init(CGColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.5)), lineWidth: 0.5)
                 .frame(height: 0.5)
                 
-            
             HStack(alignment: .center, spacing: nil){
                 Button("Back", action: { isPreviewReady = false })
                 Button("Back to Home", action: { backHandler() }).padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
                 Spacer()
                 Button("Save", action: {
                     isSaving = true
+                    progressList = controller.getProgressList()
                     controller.save(progessHandler: { currentItem, completedItem, totalItem in
                             currentProgressName = currentItem
                             progressStatus = Float(completedItem)/Float(totalItem)
+                            if completedItem > 0 && progressList.count > completedItem
+                            {
+                                progressList[completedItem - 1].state = .completed
+                            }
 
                     }, completionHandler: { result in
                         switch result
@@ -553,9 +710,12 @@ struct BuildNumberEditorView: View {
                         case .success(_):
                             progressStatus = 1.0
                             currentProgressName = "Completed"
+                            progressList.markAllCompleted()
                             completedSound()
                             showLocalNotification(title: controller.model.isBuild ? "Build Number is changed successfully" : "Version Number is changed successfully", subtitle: "\(controller.model.workspaceFormattedName) -> \(controller.model.excutableProjects.compactMap{ $0.file.fileName.removeExtension}.joined(separator: ", "))")
+                            
                         case .failure(let error):
+                        progressList.markOthersAsFailed()
                         alertMsg = error.localizedDescription
                         alertTitle = error.title
                         isAlertNeeded = true

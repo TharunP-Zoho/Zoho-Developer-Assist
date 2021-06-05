@@ -186,6 +186,34 @@ extension String {
         return nil
     }
     
+    func getInt(in postion: Postion) -> Int?
+    {
+        let components = self.components(separatedBy: ".")
+        
+        switch postion {
+        case .last:
+            return Int(components.last ?? "")
+        case .other(let postion):
+            return Int(components[postion - 1])
+        }
+    }
+    
+    func getFolderList() -> [String]
+    {
+        var result = self.components(separatedBy: "/")
+        
+        if self.first == "/"
+        {
+            result.removeFirst()
+        }
+        
+        if self.last == "/"
+        {
+            result.removeLast()
+        }
+        
+        return result
+    }
     
     
     

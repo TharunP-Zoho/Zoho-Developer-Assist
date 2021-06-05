@@ -35,8 +35,9 @@ struct Project: Hashable
     var commonValue = ""
     var sampleBuildNumber = ""
     var sampleVersionNumber = ""
+    var incrementalValue = 0
     
-    mutating func computeValue(incrementalValue: Int, postion: Postion, isBuildNumberChange: Bool) -> Result<Project, CustomError>
+    mutating func computeValue(postion: Postion, isBuildNumberChange: Bool) -> Result<Project, CustomError>
     {
         var buildNumberIssueFiles = [String]()
         var versionNumberIssueFiles = [String]()
@@ -116,6 +117,52 @@ struct Project: Hashable
     }
 }
 
+extension Array where Element == Project
+{
+    mutating func syncNumber(incrementValue: Int, postion: Postion, isBuild: Bool)
+    {
+        guard self.count > 1 else { return }
+        
+        var highestValue = 0
+        
+        if isBuild
+        {
+            self.forEach{
+                let intValue = $0.sampleBuildNumber.getInt(in: postion) ?? 0
+                if intValue > highestValue
+                {
+                    highestValue = intValue
+                }
+            }
+        }
+        else
+        {
+            self.forEach{
+                let intValue = $0.sampleVersionNumber.getInt(in: postion) ?? 0
+                if intValue > highestValue
+                {
+                    highestValue = intValue
+                }
+            }
+        }
+        
+        highestValue = highestValue + incrementValue
+        
+        for (index, project) in self.enumerated()
+        {
+            if isBuild
+            {
+                self[index].incrementalValue = highestValue - (project.sampleBuildNumber.getInt(in: postion) ?? 0)
+            }
+            else
+            {
+                self[index].incrementalValue = highestValue - (project.sampleVersionNumber.getInt(in: postion) ?? 0)
+            }
+            
+        }
+    }
+}
+
 struct BuildConfig: Hashable
 {
     var id = ""
@@ -144,9 +191,20 @@ enum Postion: Hashable
         switch self
         {
         case .other(let integer):
-            return "\(integer)"
+            if integer == 1
+            {
+                return "Major"
+            }
+            if integer == 2
+            {
+                return "Minor"
+            }
+            else
+            {
+                return "Minor(\(integer - 2))"
+            }
         case .last:
-            return "Last"
+            return "Patch"
         }
     }
 }
@@ -155,7 +213,6 @@ enum BuildNumberType
 {
    case plain, combineLastTwoWithHunderMutiple
 }
-
 
 struct BuildNumberEditiorModel
 {
@@ -173,6 +230,19 @@ struct BuildNumberEditiorModel
     var selectedPosition = Postion.last
     var excutableProjects = [Project]()
     var isPreviouslyLoaded = false
+    
+    //Git
+    var isGitNeeded = false
+    var gitLocation = ""
+    var needToCreateNewBranch = false
+    var newBranchName = ""
+    var commitMsg = ""
+    var needToRaiseMR = false
+    var mrTitle = ""
+    var mrDescription = ""
+    var mrLabel = ""
+    var mrAssign = ""
+    var mrMilestone = ""
     
     enum UserDefaultKeys: String
     {
@@ -203,3 +273,35 @@ struct BuildNumberEditiorModel
 
     
 }
+
+struct ProgressItem
+{
+    enum State
+    {
+        case completed, failed, processing
+    }
+    var itemName: String
+    var state: State
+}
+
+extension Array where Element == ProgressItem
+{
+    mutating func markAllCompleted()
+    {
+        for (index, _) in self.enumerated()
+        {
+                self[index].state = .completed
+        }
+    }
+    mutating func markOthersAsFailed()
+    {
+        for (index, progressItem) in self.enumerated()
+        {
+            if progressItem.state == .processing
+            {
+                self[index].state = .failed
+            }
+        }
+    }
+}
+
