@@ -209,11 +209,11 @@ struct BuildNumberEditiorController
             
             if gitFileList.count > 0
             {
-                var slipt = gitFileList[0].string.components(separatedBy: "/.git")
+                let slipt = gitFileList[0].string.components(separatedBy: "/.git")
                 
                 if slipt.count > 0
                 {
-                    var temp = slipt[0].components(separatedBy: "/")
+                    let temp = slipt[0].components(separatedBy: "/")
                     
                     DispatchQueue.main.async
                     {
@@ -345,14 +345,34 @@ struct BuildNumberEditiorController
     {
         var progressList = [ProgressItem]()
         
+        //Git Check status
         if model.isGitNeeded
         {
             progressList.append(ProgressItem(itemName: "Checking Git status", state: .processing))
         }
         
+        //Git New Branch
+        if model.needToCreateNewBranch
+        {
+            progressList.append(ProgressItem(itemName: "Creating New Branch", state: .processing))
+        }
+        
+        //Writing Project
         for project in self.model.excutableProjects
         {
             progressList.append(ProgressItem(itemName: "Writing Project File - \(project.file.fileName.removeExtension)", state: .processing))
+        }
+        
+        //Git commit adn push
+        if model.isGitNeeded
+        {
+            progressList.append(ProgressItem(itemName: "Committing and Pushing the changes", state: .processing))
+        }
+        
+        //Git raise MR
+        if model.needToRaiseMR
+        {
+            progressList.append(ProgressItem(itemName: "Raising Merge Request", state: .processing))
         }
         
         

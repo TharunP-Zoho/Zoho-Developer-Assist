@@ -51,41 +51,17 @@ struct BuildNumberEditorView: View {
             
         if !isPreviewReady && !isSaving // Configuration View
         {
-            VStack(alignment: .leading)
-            {
-                ScrollView(showsIndicators: false)
-                {
-                    configurationView()
-                        .onAppear(perform: { self.viewDidLoad() })
-                }
-                .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 15))
-                
-                getNavigationBar()
-            }
-            .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
+            configurationPage()
         }
         else if isPreviewReady && !isSaving // Preview View
         {
-            VStack(alignment: .leading)
-            {
-                ScrollView(showsIndicators: false)
-                {
-                    getPreviewBanner()
-                        .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
-                    getPreview()
-                }
-                .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 15))
-                
-                getPreviewNavigationBar()
-            }
-            .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
-            .transition(AnyTransition.slide.combined(with: .opacity))
-            .animation(.default)
-            
+            previewPage()
         }
         else if isSaving // Saving View
         {
             getSavingView()
+                .transition(AnyTransition.slide.combined(with: .opacity))
+                .animation(.default)
         }
         
         //Hack to show alert on async process
@@ -100,6 +76,44 @@ struct BuildNumberEditorView: View {
         }
     }
     
+    private func configurationPage() -> some View
+    {
+        VStack(alignment: .leading)
+        {
+            ScrollView(showsIndicators: false)
+            {
+                configurationView()
+                    .onAppear(perform: { self.viewDidLoad() })
+            }
+            .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 15))
+            
+            getNavigationBar()
+        }
+        .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
+        .transition(AnyTransition.slide.combined(with: .opacity))
+//        .transition(.move(edge: .trailing))
+        .animation(.default)
+    }
+    
+    private func previewPage() -> some View
+    {
+        VStack(alignment: .leading)
+        {
+            ScrollView(showsIndicators: false)
+            {
+                getPreviewBanner()
+                    .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
+                getPreview()
+            }
+            .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 15))
+            
+            getPreviewNavigationBar()
+        }
+        .padding(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
+        //.transition(AnyTransition.slide.combined(with: .opacity))
+        .transition(.move(edge: .trailing))
+        .animation(.default)
+    }
     
     private func configurationView() -> some View
     {
@@ -365,19 +379,26 @@ struct BuildNumberEditorView: View {
         {
             Toggle("Git", isOn: $controller.model.isGitNeeded)
                 .onChange(of: controller.model.isGitNeeded, perform: {_ in
-                    isProgressViewNeeded = true
-                    canShowGitConfiguration = false
-                    controller.searchGitFile(completionHandler: {result in
-                        canShowGitConfiguration = true
-                        isProgressViewNeeded = false
-                        switch result
-                        {
-                        case .success(let folder):
-                            controller.model.gitLocation = folder
-                        case .failure(_):
-                            break
-                        }
-                    })
+                    if controller.model.isGitNeeded
+                    {
+                        isProgressViewNeeded = true
+                        canShowGitConfiguration = false
+                        controller.searchGitFile(completionHandler: {result in
+                            canShowGitConfiguration = true
+                            isProgressViewNeeded = false
+                            switch result
+                            {
+                            case .success(let folder):
+                                controller.model.gitLocation = folder
+                            case .failure(_):
+                                break
+                            }
+                            })
+                    }
+                    else
+                    {
+                        canShowGitConfiguration = false
+                    }
                 })
                 
             
@@ -664,7 +685,7 @@ struct BuildNumberEditorView: View {
                 .padding(EdgeInsets(top: 30, leading: 0, bottom: 10, trailing: 0))
             HStack
             {
-                if progressStatus == 1.0
+                if currentProgressName == "Completed"
                 {
                     Image(systemName: "checkmark.circle")
                         .scaleEffect(1.5)
@@ -678,7 +699,7 @@ struct BuildNumberEditorView: View {
                 Text(currentProgressName)
             }
             
-            if progressStatus == 1.0
+            if currentProgressName == "Completed"
             {
                 Button("Back to Home", action: { backHandler() })
                     .frame(width: nil, height: 40, alignment: .center)
@@ -766,6 +787,7 @@ struct BuildNumberEditorView: View {
                         }
                     }
                 })
+                .disabled(isProgressViewNeeded)
             }
             .padding()
         }
@@ -816,8 +838,13 @@ struct BuildNumberEditorView: View {
     {
         let totalItem = progressList.count
         
-        currentProgressName = progressList[progress].itemName
+        if progress < totalItem
+        {
+            currentProgressName = progressList[progress].itemName
+        }
+        
         progressStatus = Float(progress)/Float(totalItem)
+        
         if progressStatus == 1.0
         {
             currentProgressName = "Completed"
