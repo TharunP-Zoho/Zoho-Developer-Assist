@@ -200,6 +200,52 @@ struct BuildNumberEditiorController
         return resultTargets
     }
     
+    func searchGitFile(completionHandler: @escaping (Result<String, CustomError>) -> Void)
+    {
+        DispatchQueue.global(qos: .userInitiated).async
+        {
+            let gitFileList  = FileManager.default.getAllFilesRecursively(url: URL(fileURLWithPath: model.workspaceUrl))
+                .filter{ $0.string.contains(".git")}
+            
+            if gitFileList.count > 0
+            {
+                var slipt = gitFileList[0].string.components(separatedBy: "/.git")
+                
+                if slipt.count > 0
+                {
+                    var temp = slipt[0].components(separatedBy: "/")
+                    
+                    DispatchQueue.main.async
+                    {
+                        completionHandler(.success(temp.last ?? ""))
+                    }
+                    return
+                }
+                
+            }
+            
+            DispatchQueue.main.async
+            {
+                completionHandler(.failure(CustomError(title: "Unable to find git file", description: "There is not git file in the selected localtion")))
+            }
+        }
+    }
+    
+    func fetchBrachList(needMore: Bool = false, completionHandler: @escaping (Result<[String], CustomError>) -> Void )
+    {
+        DispatchQueue.global(qos: .userInitiated).async
+        {
+            let git = Git(repoLocation: model.workspaceUrl.getUrlForFolder(model.gitLocation))
+            
+            let result = git.brachList(needMore: needMore)
+            
+            DispatchQueue.main.async
+            {
+                completionHandler(result)
+            }
+        }
+    }
+    
     func save(progessHandler: @escaping (Int) -> Void, completionHandler: @escaping (Result<String, CustomError>) -> Void)
     {
         func sendResult(_ result: Result<String, CustomError>) -> Bool
@@ -237,12 +283,20 @@ struct BuildNumberEditiorController
         
         DispatchQueue.global(qos: .userInitiated).async
         {
-            //Git Check status
+
             let git = Git(repoLocation: model.workspaceUrl.getUrlForFolder(model.gitLocation))
             
+            //Git Check status
             if canProceed && model.isGitNeeded
             {
-                let result = self.gitStatusCheck(git)
+                let result = git.statusCheck()
+                canProceed = sendResult(result)
+            }
+            
+            //Git New Branch
+            if canProceed && model.needToCreateNewBranch
+            {
+                let result = git.newBranch(branchName: model.isBuild ? model.excutableProjects.getNewSampleBuildNumber() : model.excutableProjects.getNewSampleVersionNumber())
                 canProceed = sendResult(result)
             }
             
@@ -260,6 +314,19 @@ struct BuildNumberEditiorController
                         break
                     }
                 }
+            }
+            
+            //Git commit adn push
+            if canProceed && model.isGitNeeded
+            {
+                let result = git.commitAndPush(msg: model.getCommitMsg())
+                canProceed = sendResult(result)
+            }
+            
+            //Git raise MR
+            if canProceed && model.needToRaiseMR
+            {
+                
             }
             
             //SuccessfullCompeleted
@@ -292,33 +359,7 @@ struct BuildNumberEditiorController
         return progressList
     }
     
-    func gitStatusCheck(_ git: Git) -> Result<String, CustomError>
-    {
-        let status = git.cmd("status")
-        
-        if status.code == 0
-        {
-            if status.result.contains("nothing to commit")
-            {
-                return .success("")
-            }
-            else if status.result.contains("Changes to be committed:") || status.result.contains("Untracked files:")
-            {
-                return .failure(CustomError(title: "Uncommitted changed found in Git", description: "Looks like some of the changes is not committed, please commit the changes and try again or discard the changes"))
-            }
-        }
-        else if status.code == 1
-        {
-            if status.result.contains("SSL certificate")
-            {
-                return .failure(CustomError(title: "VPN is not Connected", description: "Please connect your VPN and try again"))
-            }
-        }
-        
-        return .failure(CustomError(title: "Something went wrong, Check the below git result", description: status.result))
-    }
-    
-    func writeProject(forProject project: Project, completionHandler: @escaping (Result<String, CustomError>) -> Void)
+    private func writeProject(forProject project: Project, completionHandler: @escaping (Result<String, CustomError>) -> Void)
     {
         var projectFile = FileManager.default.readFile(url: project.file + "/project.pbxproj"){ error in completionHandler(.failure(error))}
         

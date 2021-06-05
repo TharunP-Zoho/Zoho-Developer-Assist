@@ -31,6 +31,9 @@ struct BuildNumberEditorView: View {
     
     //GitAlert
     @State var isGitAlertNeeded = true
+    @State var isBranchFetching = false
+    @State var needToFetchRemoteBranch = true
+    @State var canShowGitConfiguration = false
     
     var body: some View {
         
@@ -221,6 +224,7 @@ struct BuildNumberEditorView: View {
     private func showAlert() -> Alert
     {
         Alert(title: Text(alertTitle), message: Text(alertMsg), dismissButton: .cancel({
+            isAlertNeeded = false
             if isSaving
             {
                 isSaving = false
@@ -360,8 +364,24 @@ struct BuildNumberEditorView: View {
         VStack(alignment: .leading, spacing: 15)
         {
             Toggle("Git", isOn: $controller.model.isGitNeeded)
+                .onChange(of: controller.model.isGitNeeded, perform: {_ in
+                    isProgressViewNeeded = true
+                    canShowGitConfiguration = false
+                    controller.searchGitFile(completionHandler: {result in
+                        canShowGitConfiguration = true
+                        isProgressViewNeeded = false
+                        switch result
+                        {
+                        case .success(let folder):
+                            controller.model.gitLocation = folder
+                        case .failure(_):
+                            break
+                        }
+                    })
+                })
+                
             
-            if controller.model.isGitNeeded
+            if controller.model.isGitNeeded && canShowGitConfiguration
             {
                 if isGitAlertNeeded
                 {
@@ -394,61 +414,121 @@ struct BuildNumberEditorView: View {
                 })
                 .pickerStyle(SegmentedPickerStyle())
                 
-                Toggle("Creat New branch and do this change", isOn: $controller.model.needToCreateNewBranch)
-                
-                Toggle("Raise Merge Request", isOn: $controller.model.needToRaiseMR)
-                
-                if controller.model.needToRaiseMR
+                if controller.model.gitLocation != ""
                 {
-                    VStack(alignment: .leading)
-                    {
-                        Text("Title : Auto Generate")
-                            .foregroundColor(.gray)
-                            .frame(height: 30)
-                        Text("Description : Auto Generate (If need to add any point use \"Comments\"")
-                            .foregroundColor(.gray)
-                            .frame(height: 30)
-                        
-                        HStack{
-                            Text("Assignee : ")
-                                .frame(width: 70, height: 30, alignment: .leading)
-                            TextField("", text: $controller.model.mrAssign)
-                                .frame(width: 120, height: 30)
-                            
-                        }
-                        HStack{
-                            Text("Label : ")
-                                .frame(width: 70, height: 30, alignment: .leading)
-                            TextField("", text: $controller.model.mrLabel)
-                                .frame(width: 120, height: 30)
-                            
-                        }
-                        HStack{
-                            Text("Milestone : ")
-                                .frame(width: 70, height: 30, alignment: .leading)
-                            TextField("", text: $controller.model.mrMilestone)
-                                .frame(width: 120, height: 30)
-                        }
-                        
-                    }
-                    .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 0))
                     
-                    VStack(alignment: .leading)
+                    Toggle("Creat New branch and do this change", isOn: $controller.model.needToCreateNewBranch)
+                    
+                    Toggle("Raise Merge Request", isOn: $controller.model.needToRaiseMR)
+                    
+                    if controller.model.needToRaiseMR
                     {
-                        HStack
+                        VStack(alignment: .leading)
                         {
-                            Text("Comments")
-                            Text("(This will be add to the MR Description)")
-                            .foregroundColor(.gray)
+                            getTargetBranchView()
+                            
+                            Text("Title : Auto Generate")
+                                .foregroundColor(.gray)
+                                .frame(height: 30)
+                            Text("Description : Auto Generate (If need to add any point use \"Comments\"")
+                                .foregroundColor(.gray)
+                                .frame(height: 30)
+                            
+                            HStack{
+                                Text("Assignee : ")
+                                    .frame(width: 70, height: 30, alignment: .leading)
+                                TextField("", text: $controller.model.mrAssign)
+                                    .frame(width: 120, height: 30)
+                                
+                            }
+                            
                         }
-                        TextEditor(text: $controller.model.commitMsg)
-                            .multilineTextAlignment(.leading)
-                            .frame(minHeight: 70)
+                        .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 0))
+                        
+                        VStack(alignment: .leading)
+                        {
+                            HStack
+                            {
+                                Text("Comments")
+                                Text("(This will be add to the MR Description)")
+                                .foregroundColor(.gray)
+                            }
+                            TextEditor(text: $controller.model.commitMsg)
+                                .multilineTextAlignment(.leading)
+                                .frame(minHeight: 70)
+                                .overlay(Rectangle().stroke(lineWidth: 1).foregroundColor(.gray))
+                        }
                     }
                 }
                 
             }
         }.animation(.default)
+    }
+    
+    private func getTargetBranchView() -> some View
+    {
+        HStack
+        {
+            Picker("Target Branch :", selection: $controller.model.targetBranch)
+            {
+                ForEach(controller.model.branchList, id: \.self) { folder in
+                    Text(folder)
+                }
+            }
+            .onAppear(perform: {
+                isBranchFetching = true
+                controller.fetchBrachList(completionHandler: { result in
+                    isBranchFetching = false
+                    switch result
+                    {
+                    case .success(let list):
+                        controller.model.branchList = list
+                    case .failure(let error):
+                        alertTitle = error.title
+                        alertMsg = error.description
+                        isAlertNeeded = true
+                    }
+                })
+            })
+            
+            if needToFetchRemoteBranch
+            {
+                Button(
+                    action: {
+                        if !isBranchFetching
+                        {
+                            isBranchFetching = true
+                            controller.fetchBrachList(needMore: true, completionHandler: { result in
+                                isBranchFetching = false
+                                needToFetchRemoteBranch = false
+                                switch result
+                                {
+                                case .success(let list):
+                                    controller.model.branchList = list
+                                case .failure(let error):
+                                    alertTitle = error.title
+                                    alertMsg = error.description
+                                    isAlertNeeded = true
+                                }
+                                })
+                        }
+                    
+                    },
+                    label: {
+                        HStack{
+                            if isBranchFetching
+                            {
+                                ProgressView()
+                                    .scaleEffect(0.5)
+                            }
+                            else
+                            {
+                                Text("Fetch Remote")
+                            }
+                        }
+                    })
+            }
+        }
     }
     
     //MARK: Preview Banner

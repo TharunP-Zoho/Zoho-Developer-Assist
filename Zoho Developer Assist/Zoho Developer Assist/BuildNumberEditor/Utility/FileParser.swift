@@ -19,6 +19,7 @@ class FileParser
         case stringsdict
         case exceptSwift
         case xcodeproj
+        case git
     }
 
     class func getFilesList(url: URL, for fileExtension: FileExtension) -> [URL]

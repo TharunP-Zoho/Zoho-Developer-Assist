@@ -1,30 +1,11 @@
 //
-//  BuildNumberEditiorModel.swift
+//  Project.swift
 //  Zoho Developer Assist
 //
-//  Created by Tharun P on 08/05/21.
+//  Created by Tharun P on 05/06/21.
 //
 
-import SwiftUI
-
-struct CustomError: Error
-{
-    var title: String
-    var description: String
-}
-
-extension Result
-{
-    func resultWithCustomError(errorTitle: String) -> Result<Success, CustomError>
-    {
-        switch self {
-        case .success(let sucess):
-            return .success(sucess)
-        case .failure(let error):
-            return .failure(CustomError(title: errorTitle, description: error.localizedDescription))
-        }
-    }
-}
+import Foundation
 
 struct Project: Hashable
 {
@@ -115,6 +96,33 @@ struct Project: Hashable
 
         return .success(self)
     }
+    
+    func getNewSampleBuildNumber() -> String
+    {
+        for target in self.targets
+        {
+            if target.newBuildNumber != ""
+            {
+                return target.newBuildNumber
+            }
+        }
+        
+        return ""
+    }
+    
+    func getNewSampleVersionNumber() -> String
+    {
+        for target in self.targets
+        {
+            if target.newVersionNumber != ""
+            {
+                return target.newVersionNumber
+            }
+        }
+        
+        return ""
+    }
+    
 }
 
 extension Array where Element == Project
@@ -161,147 +169,36 @@ extension Array where Element == Project
             
         }
     }
-}
-
-struct BuildConfig: Hashable
-{
-    var id = ""
-    var name = ""
-}
-
-struct Target: Hashable
-{
-    var name = ""
-    var buildConfig = [BuildConfig]()
-    var buildNumber = ""
-    var versionNumber = ""
-    var newBuildNumber = ""
-    var newVersionNumber = ""
-    var selected = true
-    var isTestTarget = false
     
-}
-
-enum Postion: Hashable
-{
-    case other(Int), last
-    
-    func getString() -> String
+    func getNewSampleBuildNumber() -> String
     {
-        switch self
+        for project in self
         {
-        case .other(let integer):
-            if integer == 1
+            for target in project.targets
             {
-                return "Major"
+                if target.newBuildNumber != ""
+                {
+                    return target.newBuildNumber
+                }
             }
-            if integer == 2
-            {
-                return "Minor"
-            }
-            else
-            {
-                return "Minor(\(integer - 2))"
-            }
-        case .last:
-            return "Patch"
         }
-    }
-}
-
-enum BuildNumberType
-{
-   case plain, combineLastTwoWithHunderMutiple
-}
-
-struct BuildNumberEditiorModel
-{
-    var workspaceUrl = ""
-    var workspaceFormattedName = ""
-    var projectList = [Project]()
-    var fullProjectList = [""]
-    var isSelectAllProject = false
-    var isRemovePodAndFrameworkProject = false
-    var isBuild = true
-    var isNeedSync = false
-    var incrementalValue = 1
-    var isFullyManual = false
-    var postions = [Postion.other(1), Postion.other(2), Postion.last]
-    var selectedPosition = Postion.last
-    var excutableProjects = [Project]()
-    var isPreviouslyLoaded = false
-    
-    //Git
-    var isGitNeeded = false
-    var gitLocation = ""
-    var needToCreateNewBranch = false
-    var newBranchName = ""
-    var commitMsg = ""
-    var needToRaiseMR = false
-    var mrTitle = ""
-    var mrDescription = ""
-    var mrLabel = ""
-    var mrAssign = ""
-    var mrMilestone = ""
-    
-    enum UserDefaultKeys: String
-    {
-        case workspaceUrl, workspaceFormattedName, isSelectAllProject, isRemovePodAndFrameworkProject
-    }
-    
-    mutating func loadData()
-    {
-        let defaults: UserDefaults = .standard
-       
-        workspaceUrl = defaults.value(forKey: UserDefaultKeys.workspaceUrl.rawValue) as? String ?? ""
-        workspaceFormattedName = defaults.value(forKey: UserDefaultKeys.workspaceFormattedName.rawValue) as? String ?? ""
-        isSelectAllProject = defaults.value(forKey: UserDefaultKeys.isSelectAllProject.rawValue) as? Bool ?? false
-        isRemovePodAndFrameworkProject = defaults.value(forKey: UserDefaultKeys.isRemovePodAndFrameworkProject.rawValue) as? Bool ?? false
         
-        isPreviouslyLoaded = true
+        return ""
     }
     
-    func saveData()
+    func getNewSampleVersionNumber() -> String
     {
-        let defaults: UserDefaults = .standard
-        
-        defaults.setValue(workspaceUrl, forKey: UserDefaultKeys.workspaceUrl.rawValue)
-        defaults.setValue(workspaceFormattedName, forKey: UserDefaultKeys.workspaceFormattedName.rawValue)
-        defaults.setValue(isSelectAllProject, forKey: UserDefaultKeys.isSelectAllProject.rawValue)
-        defaults.setValue(isRemovePodAndFrameworkProject, forKey: UserDefaultKeys.isRemovePodAndFrameworkProject.rawValue)
-    }
-
-    
-}
-
-struct ProgressItem
-{
-    enum State
-    {
-        case completed, failed, processing
-    }
-    var itemName: String
-    var state: State
-}
-
-extension Array where Element == ProgressItem
-{
-    mutating func markAllCompleted()
-    {
-        for (index, _) in self.enumerated()
+        for project in self
         {
-                self[index].state = .completed
-        }
-    }
-    mutating func markOthersAsFailed()
-    {
-        for (index, progressItem) in self.enumerated()
-        {
-            if progressItem.state == .processing
+            for target in project.targets
             {
-                self[index].state = .failed
+                if target.newVersionNumber != ""
+                {
+                    return target.newVersionNumber
+                }
             }
         }
+        
+        return ""
     }
 }
-

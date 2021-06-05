@@ -31,6 +31,11 @@
 		73A3EEFE2649535F0012E2BD /* Collapsible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A3EEFD2649535F0012E2BD /* Collapsible.swift */; };
 		73E4677A264E649F00950F29 /* ToolList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73E46779264E649F00950F29 /* ToolList.swift */; };
 		73E4677C264E64C600950F29 /* ToolEnumeration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73E4677B264E64C500950F29 /* ToolEnumeration.swift */; };
+		73FFBECE266BBC8100D4BA67 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73FFBECD266BBC8100D4BA67 /* Project.swift */; };
+		73FFBED0266BBCB200D4BA67 /* Enumeration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73FFBECF266BBCB200D4BA67 /* Enumeration.swift */; };
+		73FFBED2266BBCD300D4BA67 /* CustomError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73FFBED1266BBCD300D4BA67 /* CustomError.swift */; };
+		73FFBED4266BBD1500D4BA67 /* Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73FFBED3266BBD1500D4BA67 /* Target.swift */; };
+		73FFBED6266BBD3F00D4BA67 /* ProgressItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73FFBED5266BBD3F00D4BA67 /* ProgressItem.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -61,6 +66,11 @@
 		73A3EEFD2649535F0012E2BD /* Collapsible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collapsible.swift; sourceTree = "<group>"; };
 		73E46779264E649F00950F29 /* ToolList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolList.swift; sourceTree = "<group>"; };
 		73E4677B264E64C500950F29 /* ToolEnumeration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolEnumeration.swift; sourceTree = "<group>"; };
+		73FFBECD266BBC8100D4BA67 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
+		73FFBECF266BBCB200D4BA67 /* Enumeration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enumeration.swift; sourceTree = "<group>"; };
+		73FFBED1266BBCD300D4BA67 /* CustomError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomError.swift; sourceTree = "<group>"; };
+		73FFBED3266BBD1500D4BA67 /* Target.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Target.swift; sourceTree = "<group>"; };
+		73FFBED5266BBD3F00D4BA67 /* ProgressItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressItem.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,10 +133,10 @@
 		73A3EEE0264583FD0012E2BD /* BuildNumberEditor */ = {
 			isa = PBXGroup;
 			children = (
+				73FFBECC266BBC5B00D4BA67 /* Controller */,
+				73FFBECB266BBC4E00D4BA67 /* View */,
+				73FFBECA266BBC3500D4BA67 /* Model */,
 				73A3EEF02646569A0012E2BD /* Utility */,
-				73A3EEE726459D540012E2BD /* BuildNumberEditorView.swift */,
-				73A3EEE926463FD50012E2BD /* BuildNumberEditiorModel.swift */,
-				73A3EEEB264640070012E2BD /* BuildNumberEditionController.swift */,
 				73A3EEF92646AEE80012E2BD /* BuildNumberEditorPerview.swift */,
 			);
 			path = BuildNumberEditor;
@@ -173,6 +183,7 @@
 				73A3EEFB2648559A0012E2BD /* Regex.swift */,
 				730B0B2A2663D0D0002F6F8D /* Int+Extension.swift */,
 				735FEDA92666B0E70051C0E6 /* Terminal.swift */,
+				73FFBED1266BBCD300D4BA67 /* CustomError.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -185,6 +196,34 @@
 				73244A6F2665E4A60003BF1D /* Feedbacks.swift */,
 			);
 			path = Utility;
+			sourceTree = "<group>";
+		};
+		73FFBECA266BBC3500D4BA67 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				73A3EEE926463FD50012E2BD /* BuildNumberEditiorModel.swift */,
+				73FFBECD266BBC8100D4BA67 /* Project.swift */,
+				73FFBECF266BBCB200D4BA67 /* Enumeration.swift */,
+				73FFBED3266BBD1500D4BA67 /* Target.swift */,
+				73FFBED5266BBD3F00D4BA67 /* ProgressItem.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		73FFBECB266BBC4E00D4BA67 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				73A3EEE726459D540012E2BD /* BuildNumberEditorView.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		73FFBECC266BBC5B00D4BA67 /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				73A3EEEB264640070012E2BD /* BuildNumberEditionController.swift */,
+			);
+			path = Controller;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -264,20 +303,25 @@
 				730B0B2B2663D0D0002F6F8D /* Int+Extension.swift in Sources */,
 				73E4677C264E64C600950F29 /* ToolEnumeration.swift in Sources */,
 				735FEDAA2666B0E70051C0E6 /* Terminal.swift in Sources */,
+				73FFBECE266BBC8100D4BA67 /* Project.swift in Sources */,
 				73A3EEF5264657600012E2BD /* URL+Extension.swift in Sources */,
 				73A3EEEC264640070012E2BD /* BuildNumberEditionController.swift in Sources */,
 				730B0B292663BF0F002F6F8D /* EnumeratedForEachView.swift in Sources */,
+				73FFBED0266BBCB200D4BA67 /* Enumeration.swift in Sources */,
 				73A3EEE626459A290012E2BD /* ToolView.swift in Sources */,
 				73A3EEFE2649535F0012E2BD /* Collapsible.swift in Sources */,
 				73A3EEEA26463FD50012E2BD /* BuildNumberEditiorModel.swift in Sources */,
 				73A3EEE826459D540012E2BD /* BuildNumberEditorView.swift in Sources */,
 				73A3EED0264577E50012E2BD /* HomeView.swift in Sources */,
+				73FFBED2266BBCD300D4BA67 /* CustomError.swift in Sources */,
 				73E4677A264E649F00950F29 /* ToolList.swift in Sources */,
+				73FFBED4266BBD1500D4BA67 /* Target.swift in Sources */,
 				73A3EECE264577E50012E2BD /* Zoho_Developer_AssistApp.swift in Sources */,
 				73A3EEF8264657600012E2BD /* FileParser.swift in Sources */,
 				73A3EEFA2646AEE80012E2BD /* BuildNumberEditorPerview.swift in Sources */,
 				73244A702665E4A60003BF1D /* Feedbacks.swift in Sources */,
 				73A3EEFC2648559A0012E2BD /* Regex.swift in Sources */,
+				73FFBED6266BBD3F00D4BA67 /* ProgressItem.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
