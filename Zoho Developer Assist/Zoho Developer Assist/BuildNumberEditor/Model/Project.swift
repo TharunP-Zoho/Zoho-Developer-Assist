@@ -123,6 +123,11 @@ struct Project: Hashable
         return ""
     }
     
+    func isPodOrFrameWork() -> Bool
+    {
+        return ((self.file.removeExtension.lowercased().contains("kit") || self.file.removeExtension.lowercased().contains("pod")))
+    }
+    
 }
 
 extension Array where Element == Project
@@ -200,5 +205,21 @@ extension Array where Element == Project
         }
         
         return ""
+    }
+    
+    mutating func selectAll()
+    {
+        for index in 0..<self.count
+        {
+            self[index].selected = true
+        }
+    }
+    
+    mutating func unselectAll()
+    {
+        for index in 0..<self.count
+        {
+            self[index].selected = false
+        }
     }
 }

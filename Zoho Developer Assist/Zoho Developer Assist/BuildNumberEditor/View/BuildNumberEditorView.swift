@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BuildNumberEditorView: View {
     
-    var backHandler: () -> Void
+    var backHandler: (() -> Void)? = nil
     
     @State var controller = BuildNumberEditiorController()
     
@@ -21,7 +21,6 @@ struct BuildNumberEditorView: View {
     @State var isPreviewReady = false
     @State var isSaving = false
     @State var isconstructingPreivew = false
-    @State var isFirstLoad = true
     
     //progressHandling
     @State var progressStatus: Float = 0.0
@@ -35,14 +34,14 @@ struct BuildNumberEditorView: View {
     @State var needToFetchRemoteBranch = true
     @State var canShowGitConfiguration = false
     
-    var body: some View {
-        
-            contentView()
+    init(backHandler: @escaping () -> Void)
+    {
+        self.backHandler = backHandler
     }
     
-    private func viewDidLoad()
-    {
-        isProgressViewNeeded = controller.model.isPreviouslyLoaded
+    var body: some View {
+            contentView()
+                .onAppear(){viewWillAppear()}
     }
     
     private func contentView() -> some View
@@ -83,7 +82,6 @@ struct BuildNumberEditorView: View {
             ScrollView(showsIndicators: false)
             {
                 configurationView()
-                    .onAppear(perform: { self.viewDidLoad() })
             }
             .padding(EdgeInsets(top: 0, leading: 15, bottom: 0, trailing: 15))
             
@@ -113,6 +111,30 @@ struct BuildNumberEditorView: View {
         //.transition(AnyTransition.slide.combined(with: .opacity))
         .transition(.move(edge: .trailing))
         .animation(.default)
+    }
+    
+    private func viewWillAppear()
+    {
+        isProgressViewNeeded = controller.model.isPreviouslyLoaded
+        
+        if !controller.model.workspaceFormattedName.isEmpty
+        {
+            controller.searchProjectList() { result in
+                
+                switch result
+                {
+                case .success(let (fullList, projectList)):
+                    controller.model.fullProjectList = fullList
+                    controller.model.projectList = projectList
+                    isProgressViewNeeded = false
+                    
+                case .failure(let error):
+                    alertTitle = error.title
+                    alertMsg = error.description
+                    isAlertNeeded = true
+                }
+            }
+        }
     }
     
     private func configurationView() -> some View
@@ -154,27 +176,6 @@ struct BuildNumberEditorView: View {
     //MARK: WorkSpace
     private func getWorkspaceInfo() -> some View
     {
-        if isFirstLoad
-        {
-            if !controller.model.workspaceFormattedName.isEmpty
-            {
-                controller.searchProjectList() { result in
-                    
-                    switch result
-                    {
-                    case .success(let (fullList, projectList)):
-                        controller.model.fullProjectList = fullList
-                        controller.model.projectList = projectList
-                        isProgressViewNeeded = false
-                        
-                    case .failure(let error):
-                        alertTitle = error.title
-                        alertMsg = error.description
-                        isAlertNeeded = true
-                    }
-                }
-            }
-        }
         
         return HStack{
             Text("Workspace :")
@@ -261,45 +262,31 @@ struct BuildNumberEditorView: View {
                 
                 Spacer()
                 
-                MultipleSelectionRow(title: controller.model.isSelectAllProject ? "Unselect All" : "Select All", isSelected: controller.model.isSelectAllProject)
-                {
-                    controller.model.isSelectAllProject.toggle()
-                    controller.model.projectList = controller.getProjectList(fullProjectList: controller.model.fullProjectList,
-                                                                             projectList: controller.model.projectList,
-                                                                             isSelectAllProject: controller.model.isSelectAllProject,
-                                                                             isRemovePodAndFrameworkProject: controller.model.isRemovePodAndFrameworkProject,
-                                                                             isTakeValueFromOld: false, errorHandler: {_ in})
-                    
-                }
+                Toggle(controller.model.isSelectAllProject ? "Unselect All" : "Select All", isOn: $controller.model.isSelectAllProject)
+                    .onChange(of: controller.model.isSelectAllProject, perform: { bool in
+                        if bool
+                        {
+                            controller.model.projectList.selectAll()
+                        }
+                        else
+                        {
+                            controller.model.projectList.unselectAll()
+                        }
+                })
                 
                 Spacer()
                 
-                MultipleSelectionRow(title: "Remove Pods/Framework Projects", isSelected: controller.model.isRemovePodAndFrameworkProject)
-                {
-                    controller.model.isRemovePodAndFrameworkProject.toggle()
-                    controller.model.projectList = controller.getProjectList(fullProjectList: controller.model.fullProjectList,
-                                                                             projectList: controller.model.projectList,
-                                                                             isSelectAllProject: controller.model.isSelectAllProject,
-                                                                             isRemovePodAndFrameworkProject: controller.model.isRemovePodAndFrameworkProject, errorHandler: {_ in})
-                    
-                    
-                }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
+                Toggle("Remove Pods/Framework Projects", isOn: $controller.model.isRemovePodAndFrameworkProject)
+                    .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
                 
             }
             
-            
             VStack(alignment: .leading, spacing: nil)
             {
-                
-                ForEach(controller.model.projectList, id: \.self) { item in
-                    
-                    MultipleSelectionRow(title: item.file.fileName.removeExtension, isSelected: item.selected) {
-                        
-                        for (index, project) in controller.model.projectList.enumerated() where project == item
-                        {
-                            controller.model.projectList[index].selected.toggle()
-                        }
-                        
+                ForEach(controller.model.projectList.indices, id: \.self) { index in
+                    if !(controller.model.isRemovePodAndFrameworkProject && controller.model.projectList[index].isPodOrFrameWork())
+                    {
+                        Toggle(controller.model.projectList[index].file.fileName.removeExtension, isOn: $controller.model.projectList[index].selected)
                     }
                 }
             }
@@ -308,6 +295,7 @@ struct BuildNumberEditorView: View {
                     RoundedRectangle(cornerRadius: 5)
                         .stroke(Color.gray, lineWidth: 1)
                 )
+            
         }
     }
     
@@ -334,7 +322,25 @@ struct BuildNumberEditorView: View {
             .pickerStyle(SegmentedPickerStyle())
             .frame(width: 300, height: nil, alignment: .leading)
             
-            if !controller.model.isFullyManual
+            if controller.model.isFullyManual
+            {
+                VStack{
+                    ForEach(controller.model.projectList.indices, id: \.self) { index in
+                        if controller.model.projectList[index].selected &&
+                            !(controller.model.isRemovePodAndFrameworkProject && controller.model.projectList[index].isPodOrFrameWork())
+                        {
+                            HStack{
+                                Text(controller.model.projectList[index].file.fileName.removeExtension + " :")
+                                    .frame(width: 150, alignment: .leading)
+                                TextField("", text: $controller.model.projectList[index].commonValue)
+                                    .frame(width: 100)
+                            }
+                        }
+                    }
+                    
+                }
+            }
+            else
             {
                 getBuilNumberChnage()
             }
@@ -613,21 +619,21 @@ struct BuildNumberEditorView: View {
                                     {
                                         Text(project.file.fileName.removeExtension)
                                         Spacer()
-                                        Picker("", selection: $controller.model.excutableProjects[projectIndex].isManualValue)
-                                        {
-                                            Text("Auto").tag(false)
-                                            Text("Manual").tag(true)
-                                        }
-                                        .pickerStyle(SegmentedPickerStyle())
-                                        .frame(width: 100, height: nil, alignment: .leading)
-                                        
-                                        Text(controller.model.isBuild ? "Build : " : "Version : ")
-                                            .padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
-                                            .layoutPriority(10)
-                                        TextField(project.commonValue, text: $controller.model.excutableProjects[projectIndex].commonValue)
-                                            .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
-                                            .frame(width: 75)
-                                            .layoutPriority(10)
+//                                        Picker("", selection: $controller.model.excutableProjects[projectIndex].isManualValue)
+//                                        {
+//                                            Text("Auto").tag(false)
+//                                            Text("Manual").tag(true)
+//                                        }
+//                                        .pickerStyle(SegmentedPickerStyle())
+//                                        .frame(width: 100, height: nil, alignment: .leading)
+//
+//                                        Text(controller.model.isBuild ? "Build : " : "Version : ")
+//                                            .padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
+//                                            .layoutPriority(10)
+//                                        TextField(project.commonValue, text: $controller.model.excutableProjects[projectIndex].commonValue)
+//                                            .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
+//                                            .frame(width: 75)
+//                                            .layoutPriority(10)
                                         
                                     }
                                 })
@@ -701,7 +707,7 @@ struct BuildNumberEditorView: View {
             
             if currentProgressName == "Completed"
             {
-                Button("Back to Home", action: { backHandler() })
+                Button("Back to Home", action: { backHandler?() })
                     .frame(width: nil, height: 40, alignment: .center)
                     
             }
@@ -718,7 +724,7 @@ struct BuildNumberEditorView: View {
                     VStack(alignment: .leading, spacing: nil)
                     {
                         ForEach(progressList.indices, id: \.self) { index in
-                            
+
                             HStack{
                                 if progressList[index].state == .completed
                                 {
@@ -766,7 +772,7 @@ struct BuildNumberEditorView: View {
                 
             
             HStack(alignment: .center, spacing: nil){
-                Button("Back", action: { backHandler() })
+                Button("Back", action: { backHandler?() })
                 Spacer()
                 Button(action: {
                     isconstructingPreivew = true
@@ -803,7 +809,7 @@ struct BuildNumberEditorView: View {
                 
             HStack(alignment: .center, spacing: nil){
                 Button("Back", action: { isPreviewReady = false })
-                Button("Back to Home", action: { backHandler() }).padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
+                Button("Back to Home", action: { backHandler?() }).padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
                 Spacer()
                 Button("Save", action: { save() })
             }
@@ -858,26 +864,8 @@ struct BuildNumberEditorView: View {
         
 }
 
-struct MultipleSelectionRow: View {
-    var title: String
-    @State var isSelected: Bool
-    @State var reference: Bool = true
-    var action: () -> Void
-
-    var body: some View {
-        
-        HStack{
-            Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                .foregroundColor(isSelected ? Color.blue : Color.secondary)
-            
-            Text(title)
-        }
-        .onTapGesture {
-            action()
-            isSelected.toggle()
-            reference.toggle()
-        }
-    }
+extension Bool: Equatable
+{
     
 }
 

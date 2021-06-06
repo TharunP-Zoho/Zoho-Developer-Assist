@@ -29,7 +29,7 @@ struct BuildNumberEditiorController
                 .filter{ path in path.pathExtension == FileParser.FileExtension.xcodeproj.rawValue }
                 .compactMap(){ url in url.string }
             
-            let tempProjectList = safeSelf.getProjectList(fullProjectList: tempFullProjectList, projectList: safeModel.projectList, isSelectAllProject: safeModel.isSelectAllProject, isRemovePodAndFrameworkProject: safeModel.isRemovePodAndFrameworkProject){error in
+            let tempProjectList = safeSelf.getProjectList(fullProjectList: tempFullProjectList, projectList: safeModel.projectList){error in
                 DispatchQueue.main.async
                 {
                     complationHandler(.failure(error))
@@ -50,21 +50,8 @@ struct BuildNumberEditiorController
 
     }
     
-    func getProjectList(fullProjectList: [String], projectList: [Project], isSelectAllProject: Bool, isRemovePodAndFrameworkProject: Bool, isTakeValueFromOld: Bool = true, errorHandler: (CustomError) -> Void) -> [Project]
+    func getProjectList(fullProjectList: [String], projectList: [Project], errorHandler: (CustomError) -> Void) -> [Project]
     {
-        func getSelectedValueForFileFromProjectList(projectList: [Project], fileName: String) -> Bool
-        {
-            var value = false
-            projectList.forEach() { project in
-                if project.file == fileName
-                {
-                    value = project.selected
-                    return
-                }
-            }
-    
-            return value
-        }
         
         func getSampleVersionAndBuildNumber(for projectFile: String) -> (version: String, build: String)
         {
@@ -84,12 +71,10 @@ struct BuildNumberEditiorController
         
         fullProjectList.forEach(){ projectFile in
             
-            if (!((projectFile.fileName.removeExtension.lowercased().contains("kit") || projectFile.fileName.removeExtension.lowercased().contains("pod")) && isRemovePodAndFrameworkProject))
-            {
-                let sample = getSampleVersionAndBuildNumber(for: projectFile)
-                
-                tempProjectList.append(Project(file: projectFile, selected: isSelectAllProject ? true : (isTakeValueFromOld ? getSelectedValueForFileFromProjectList(projectList: projectList, fileName: projectFile) : false), sampleBuildNumber: sample.build, sampleVersionNumber: sample.version))
-            }
+            let sample = getSampleVersionAndBuildNumber(for: projectFile)
+            
+            tempProjectList.append(Project(file: projectFile, sampleBuildNumber: sample.build, sampleVersionNumber: sample.version))
+            
         }
         
         return tempProjectList
@@ -104,11 +89,11 @@ struct BuildNumberEditiorController
             
             projectList.forEach() { project in
                 
-                if project.selected
+                if project.selected && !(model.isRemovePodAndFrameworkProject && project.isPodOrFrameWork())
                 {
-                    excutableProjects.append(Project(file: project.file, targets: getTargetsForProject(project){ error in
+                    excutableProjects.append(Project(file: project.file, targets: self.getTargetsForProject(project){ error in
                         complationHandler(Result.failure(error))
-                    }, selected: project.selected, sampleBuildNumber: project.sampleBuildNumber, sampleVersionNumber: project.sampleVersionNumber))
+                    }, selected: project.selected, isManualValue: model.isFullyManual, sampleBuildNumber: project.sampleBuildNumber, sampleVersionNumber: project.sampleVersionNumber))
                 }
                 
             }
@@ -204,7 +189,7 @@ struct BuildNumberEditiorController
     {
         DispatchQueue.global(qos: .userInitiated).async
         {
-            let gitFileList  = FileManager.default.getAllFilesRecursively(url: URL(fileURLWithPath: model.workspaceUrl))
+            let gitFileList  = FileManager.default.getAllFilesRecursively(url: URL(fileURLWithPath: self.model.workspaceUrl))
                 .filter{ $0.string.contains(".git")}
             
             if gitFileList.count > 0
@@ -235,7 +220,7 @@ struct BuildNumberEditiorController
     {
         DispatchQueue.global(qos: .userInitiated).async
         {
-            let git = Git(repoLocation: model.workspaceUrl.getUrlForFolder(model.gitLocation))
+            let git = Git(repoLocation: self.model.workspaceUrl.getUrlForFolder(self.model.gitLocation))
             
             let result = git.brachList(needMore: needMore)
             
@@ -284,28 +269,28 @@ struct BuildNumberEditiorController
         DispatchQueue.global(qos: .userInitiated).async
         {
 
-            let git = Git(repoLocation: model.workspaceUrl.getUrlForFolder(model.gitLocation))
+            let git = Git(repoLocation: self.model.workspaceUrl.getUrlForFolder(self.model.gitLocation))
             
             //Git Check status
-            if canProceed && model.isGitNeeded
+            if canProceed && self.model.isGitNeeded
             {
                 let result = git.statusCheck()
                 canProceed = sendResult(result)
             }
             
             //Git New Branch
-            if canProceed && model.needToCreateNewBranch
+            if canProceed && self.model.needToCreateNewBranch
             {
-                let result = git.newBranch(branchName: model.isBuild ? model.excutableProjects.getNewSampleBuildNumber() : model.excutableProjects.getNewSampleVersionNumber())
+                let result = git.newBranch(branchName: self.model.isBuild ? self.model.excutableProjects.getNewSampleBuildNumber() : self.model.excutableProjects.getNewSampleVersionNumber())
                 canProceed = sendResult(result)
             }
             
             //Writing Project
             if canProceed
             {
-                for project in model.excutableProjects
+                for project in self.model.excutableProjects
                 {
-                    writeProject(forProject: project){ result in
+                    self.writeProject(forProject: project){ result in
                         canProceed = sendResult(result)
                     }
                     
@@ -317,14 +302,14 @@ struct BuildNumberEditiorController
             }
             
             //Git commit adn push
-            if canProceed && model.isGitNeeded
+            if canProceed && self.model.isGitNeeded
             {
-                let result = git.commitAndPush(msg: model.getCommitMsg())
+                let result = git.commitAndPush(msg: self.model.getCommitMsg())
                 canProceed = sendResult(result)
             }
             
             //Git raise MR
-            if canProceed && model.needToRaiseMR
+            if canProceed && self.model.needToRaiseMR
             {
                 
             }

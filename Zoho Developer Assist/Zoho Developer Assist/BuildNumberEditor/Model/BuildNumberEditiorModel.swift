@@ -45,7 +45,7 @@ struct BuildNumberEditiorModel
        
         workspaceUrl = defaults.value(forKey: UserDefaultKeys.workspaceUrl.rawValue) as? String ?? ""
         workspaceFormattedName = defaults.value(forKey: UserDefaultKeys.workspaceFormattedName.rawValue) as? String ?? ""
-        isSelectAllProject = defaults.value(forKey: UserDefaultKeys.isSelectAllProject.rawValue) as? Bool ?? false
+        mrAssign = defaults.value(forKey: UserDefaultKeys.assigneeName.rawValue) as? String ?? ""
         isRemovePodAndFrameworkProject = defaults.value(forKey: UserDefaultKeys.isRemovePodAndFrameworkProject.rawValue) as? Bool ?? false
         
         isPreviouslyLoaded = true
@@ -57,7 +57,7 @@ struct BuildNumberEditiorModel
         
         defaults.setValue(workspaceUrl, forKey: UserDefaultKeys.workspaceUrl.rawValue)
         defaults.setValue(workspaceFormattedName, forKey: UserDefaultKeys.workspaceFormattedName.rawValue)
-        defaults.setValue(isSelectAllProject, forKey: UserDefaultKeys.isSelectAllProject.rawValue)
+        defaults.setValue(isSelectAllProject, forKey: UserDefaultKeys.assigneeName.rawValue)
         defaults.setValue(isRemovePodAndFrameworkProject, forKey: UserDefaultKeys.isRemovePodAndFrameworkProject.rawValue)
     }
 

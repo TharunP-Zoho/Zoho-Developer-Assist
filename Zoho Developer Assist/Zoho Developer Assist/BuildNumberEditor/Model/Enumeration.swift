@@ -42,5 +42,5 @@ enum BuildNumberType
 
 enum UserDefaultKeys: String
 {
-    case workspaceUrl, workspaceFormattedName, isSelectAllProject, isRemovePodAndFrameworkProject
+    case workspaceUrl, workspaceFormattedName, isRemovePodAndFrameworkProject, assigneeName
 }
