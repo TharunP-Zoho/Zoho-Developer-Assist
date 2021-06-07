@@ -10,5 +10,5 @@ import Foundation
 
 enum Tool: String
 {
-    case none, buildNumberChanger, empty1, empty2
+    case none, buildNumberChanger, localBuildTester, appStoreReviewPostBuilder
 }

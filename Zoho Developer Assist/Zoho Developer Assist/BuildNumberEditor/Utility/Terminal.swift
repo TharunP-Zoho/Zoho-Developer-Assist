@@ -92,19 +92,24 @@ struct Git
     
     func commitAndPush(msg: String) -> Result<String, CustomError>
     {
+        let stageStatus = cmd("add --all")
         let commitStatus = cmd("commit -m \"\(msg)\"")
         
-        if commitStatus.code == 0
+        if stageStatus.code == 0
         {
-            let pushStatus = cmd("push")
-            
-            if pushStatus.code == 0
+            if commitStatus.code == 0
             {
-                return .success("")
+                let pushStatus = cmd("push")
+                
+                if pushStatus.code == 0
+                {
+                    return .success("")
+                }
+                return .failure(CustomError(title: "Unable to push", description: pushStatus.result))
             }
-            return .failure(CustomError(title: "Unable to push", description: pushStatus.result))
+            return .failure(CustomError(title: "Unable to commit", description: commitStatus.result))
         }
-        return .failure(CustomError(title: "Unable to commit", description: commitStatus.result))
+        return .failure(CustomError(title: "Unable to commit", description: stageStatus.result))
     }
     
     func raiseMR(title: String, descripition: String, targetBranch: String, assinee: String?) -> Result<String, CustomError>
@@ -143,5 +148,46 @@ struct Git
         }
         
         return .failure(CustomError(title: "Unable to fetch branch list", description: status.result))
+    }
+}
+
+struct XCodeBuild
+{
+    var repoLocation = ""
+    {
+        didSet
+        {
+            if repoLocation.last != "/"
+            {
+                repoLocation = repoLocation + "/"
+            }
+        }
+    }
+    
+    private var getFileType: String
+    {
+        guard let fileName = repoLocation.components(separatedBy: "/").last else { return "" }
+        if fileName.contains("xcproject")
+        {
+            return "project"
+        }
+        else if fileName.contains("xcworkspace")
+        {
+            return "workspace"
+        }
+        
+        return ""
+    }
+    
+    func cmd(_ commands: String...) -> (code: Int32, result: String)
+    {
+        var resultcommand = "xcode -\(getFileType) \(repoLocation)"
+        
+        for command in commands
+        {
+            resultcommand += " -\(command)"
+        }
+        
+        return Bash.runShell(resultcommand)
     }
 }

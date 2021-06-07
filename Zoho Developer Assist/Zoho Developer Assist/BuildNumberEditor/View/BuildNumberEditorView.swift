@@ -21,6 +21,7 @@ struct BuildNumberEditorView: View {
     @State var isPreviewReady = false
     @State var isSaving = false
     @State var isconstructingPreivew = false
+    @State var canShowProjectSelection = false
     
     //progressHandling
     @State var progressStatus: Float = 0.0
@@ -126,6 +127,7 @@ struct BuildNumberEditorView: View {
                 case .success(let (fullList, projectList)):
                     controller.model.fullProjectList = fullList
                     controller.model.projectList = projectList
+                    canShowProjectSelection = !projectList.isEmpty
                     isProgressViewNeeded = false
                     
                 case .failure(let error):
@@ -146,7 +148,7 @@ struct BuildNumberEditorView: View {
             
             Divider()
             
-            if !controller.model.projectList.isEmpty
+            if canShowProjectSelection
             {
                 projectSelectionView()
                 Divider()
@@ -217,8 +219,14 @@ struct BuildNumberEditorView: View {
                 {
                 case .success(let (fullList, projectList)):
                     controller.model.fullProjectList = fullList
-                    controller.model.projectList = projectList
-                    isProgressViewNeeded = false
+                    canShowProjectSelection = false
+                    //This delay is to avoid index out of bound in ForEach View on projects list
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+                        controller.model.projectList = projectList
+                        canShowProjectSelection = true
+                        controller.model.isGitNeeded = false // resetting git if file changed.
+                        isProgressViewNeeded = false
+                    })
                 
                 case .failure(let error):
                     alertTitle = error.title

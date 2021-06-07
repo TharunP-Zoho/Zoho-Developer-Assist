@@ -30,17 +30,17 @@ struct ToolList: Hashable
                           iconColor: "BuildIcon",
                           iconBackground: "BuildIconBackground")))
             
-            tools.append((ToolObject(id: .empty1,
-                          title: "Empty",
-                          description: "This app is used to change the build number easy and safe, so please try the. You can also get push app to git, check once.",
-                          icon: "building.columns",
+            tools.append((ToolObject(id: .localBuildTester,
+                          title: "Local Build Tester",
+                          description: "This app is used to check whether the targets are properly building,\n\n",
+                          icon: "hammer",
                           iconColor: "BuildIcon",
                           iconBackground: "BuildIconBackground")))
             
-            tools.append(ToolObject(id: .empty2,
-                          title: "Empty ",
-                          description: "This app is used to change the build number easy and safe, so please try the. You can also get push app to git, check once.",
-                          icon: "building.columns",
+            tools.append(ToolObject(id: .appStoreReviewPostBuilder,
+                          title: "Review Post Builder",
+                          description: "This app is used to generate the App Store Review post pic, where it contains last month rating, current month rating and overall rating",
+                          icon: "star",
                           iconColor: "BuildIcon",
                           iconBackground: "BuildIconBackground"))
             
@@ -53,6 +53,10 @@ struct ToolList: Hashable
             switch id {
             case .buildNumberChanger:
                 BuildNumberEditorView(backHandler: backHandler)
+            case .localBuildTester:
+                LocalBuildTesterView(backHandler: backHandler)
+            case .appStoreReviewPostBuilder:
+                LocalBuildTesterView(backHandler: backHandler)
             default:
                 EmptyView()
             }

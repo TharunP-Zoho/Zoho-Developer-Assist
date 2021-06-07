@@ -25,6 +25,11 @@ extension FileManager
         })
     }
     
+    func getFiles(url: String) -> [String]?
+    {
+        return try? FileManager.default.contentsOfDirectory(atPath: url)
+    }
+    
     func readFile(url: String, errorHandler: (CustomError) -> Void) -> String
     {
         var fileContent = ""

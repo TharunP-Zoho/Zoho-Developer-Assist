@@ -189,22 +189,21 @@ struct BuildNumberEditiorController
     {
         DispatchQueue.global(qos: .userInitiated).async
         {
-            let gitFileList  = FileManager.default.getAllFilesRecursively(url: URL(fileURLWithPath: self.model.workspaceUrl))
-                .filter{ $0.string.contains(".git")}
+            var tempUrl = "/"
             
-            if gitFileList.count > 0
+            let folders = self.model.workspaceUrl.components(separatedBy: "/")
+            
+            for folder in folders where !folder.isEmpty
             {
-                let slipt = gitFileList[0].string.components(separatedBy: "/.git")
+                tempUrl += "\(folder)/"
+                let files = FileManager.default.getFiles(url: tempUrl)
                 
-                if slipt.count > 0
+                if let strongFiles = files, strongFiles.contains(".git")
                 {
-                    let temp = slipt[0].components(separatedBy: "/")
-                    
                     DispatchQueue.main.async
                     {
-                        completionHandler(.success(temp.last ?? ""))
+                        completionHandler(.success(folder))
                     }
-                    return
                 }
                 
             }
